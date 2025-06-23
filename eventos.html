@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Build an Event - Eventos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --accent-color: #3b82f6;
+            --background-light: #ffffff;
+            --text-color-light: #1a1a1a;
+            --border-color: #e5e5e5;
+
+            /* Dark mode colors */
+            --background-dark: #121212;
+            --text-color-dark: #e0e0e0;
+            --border-color-dark: #333333;
+
+            /* Button colors */
+            --btn-edit-bg: #3b82f6;
+            --btn-edit-bg-hover: #2563eb;
+            --btn-expenses-bg: #10b981;
+            --btn-expenses-bg-hover: #059669;
+            --btn-move-bg: #f3f4f6;
+            --btn-move-bg-hover: #d1d5db;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--background-light);
+            color: var(--text-color-light);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background: var(--background-dark);
+            color: var(--text-color-dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .nav {
+            background: var(--primary-color);
+            padding: 1rem 0;
+            color: white;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            background: var(--accent-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: var(--text-color-light);
+            border-bottom: 2px solid transparent;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        body.dark-mode .tab {
+            color: var(--text-color-dark);
+        }
+
+        body.dark-mode .tab.active {
+            color: var(--accent-color);
+        }
+
+        .event-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .event-card {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 8px;
+            background: white;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .event-card {
+            background: #1e1e1e;
+            border-color: var(--border-color-dark);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .btn-edit {
+            background: var(--btn-edit-bg);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: var(--btn-edit-bg-hover);
+        }
+
+        .btn-expenses {
+            background-color: var(--btn-expenses-bg);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .btn-expenses:hover {
+            background-color: var(--btn-expenses-bg-hover);
+        }
+
+        .btn-move {
+            background: var(--btn-move-bg);
+            color: var(--text-color-light);
+        }
+
+        .btn-move:hover {
+            background: var(--btn-move-bg-hover);
+        }
+
+        body.dark-mode .btn-move {
+            background: #2c2c2c;
+            color: var(--text-color-dark);
+        }
+
+        body.dark-mode .btn-edit {
+            background: #2563eb;
+        }
+
+        body.dark-mode .btn-edit:hover {
+            background: #1e40af;
+        }
+
+        body.dark-mode .btn-expenses {
+            background-color: #059669;
+        }
+
+        body.dark-mode .btn-expenses:hover {
+            background-color: #047857;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            z-index: 1;
+            transition: background 0.3s;
+        }
+
+        body.dark-mode .dropdown-content {
+            background: #2c2c2c;
+        }
+
+        .dropdown-content button {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-color-light);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .dropdown-content button:hover {
+            background: #f3f4f6;
+        }
+
+        body.dark-mode .dropdown-content button:hover {
+            background: #3a3a3a;
+        }
+
+        .show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="main_menu.html" class="nav-brand">Build an Event</a>
+            <div class="nav-links">
+                <a href="artists.html" class="nav-link">Artistas</a>
+                <a href="venues.html" class="nav-link">Venues</a>
+                <a href="events.html" class="nav-link">Crear Evento</a>
+                <a href="eventos.html" class="nav-link active">Eventos</a>
+                <a href="config.html" class="nav-link">Configuración</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="propuesta">Propuesta</button>
+            <button class="tab" data-tab="proceso">En Proceso</button>
+            <button class="tab" data-tab="programados">Programados</button>
+            <button class="tab" data-tab="archivados">Archivados</button>
+        </div>
+
+        <div id="propuesta" class="event-list">
+            <!-- Events will be dynamically added here -->
+        </div>
+
+        <div id="proceso" class="event-list" style="display: none;">
+            <!-- Events will be dynamically added here -->
+        </div>
+
+        <div id="programados" class="event-list" style="display: none;">
+            <!-- Events will be dynamically added here -->
+        </div>
+
+        <div id="archivados" class="event-list" style="display: none;">
+            <!-- Archived events will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Show corresponding content
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.event-list').forEach(list => {
+                        list.style.display = 'none';
+                    });
+                    document.getElementById(tabId).style.display = 'grid';
+                });
+            });
+
+            // Load and display events
+            function loadEvents() {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const venues = JSON.parse(localStorage.getItem('venues')) || [];
+                const artists = JSON.parse(localStorage.getItem('artists')) || [];
+            const propuestaList = document.getElementById('propuesta');
+            const procesoList = document.getElementById('proceso');
+            const programadosList = document.getElementById('programados');
+            const archivadosList = document.getElementById('archivados');
+
+            // Clear existing content
+            propuestaList.innerHTML = '';
+            procesoList.innerHTML = '';
+            programadosList.innerHTML = '';
+            archivadosList.innerHTML = '';
+
+            events.forEach(event => {
+                // Replace venue ID with venue name
+                const venueObj = venues.find(v => v.id == event.venue);
+                const venueName = venueObj ? venueObj.name : event.venue;
+
+                // Replace artist IDs with artist names
+                const artistNames = event.artists.map(artistId => {
+                    const artistObj = artists.find(a => a.id == artistId);
+                    return artistObj ? artistObj.name : artistId;
+                });
+
+                // Create a new event object with names instead of IDs
+                // Calculate total cost from all expense categories
+                const totalCost = (event.venueCost || 0) +
+                                (event.artistFees || 0) +
+                                (event.fixedExpenses || 0) +
+                                (event.productionCost || 0) +
+                                (event.marketingExpenses || 0) +
+                                (event.transporteExpenses || 0) +
+                                (event.miscExpenses || 0) +
+                                (event.taxExpenses || 0);
+
+                const eventWithNames = {
+                    ...event,
+                    venueName,
+                    artistNames,
+                    totalCost
+                };
+
+                const card = createEventCard(eventWithNames);
+                switch(event.status || 'propuesta') {
+                    case 'proceso':
+                        procesoList.appendChild(card);
+                        break;
+                    case 'programado':
+                        programadosList.appendChild(card);
+                        break;
+                    case 'archivado':
+                        archivadosList.appendChild(card);
+                        break;
+                    default:
+                        propuestaList.appendChild(card);
+                }
+            });
+            }
+
+            function createEventCard(event) {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.innerHTML = `
+                    <div class="event-header">
+                        <h3>${event.name}</h3>
+                    <div class="event-actions">
+                        <button class="btn btn-edit" onclick="editEvent(${event.id})">Editar</button>
+                        <button class="btn btn-expenses" onclick="showExpenses(${event.id})">Gastos</button>
+                        <button class="btn btn-archive" onclick="archiveEvent(${event.id})">Archivar</button>
+                        <div class="dropdown">
+                            <button class="btn btn-move" onclick="toggleDropdown(${event.id})">Mover a ▼</button>
+                            <div id="dropdown-${event.id}" class="dropdown-content">
+                                <button onclick="moveEvent(${event.id}, 'propuesta')">Propuesta</button>
+                                <button onclick="moveEvent(${event.id}, 'proceso')">En Proceso</button>
+                                <button onclick="moveEvent(${event.id}, 'programado')">Programados</button>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div>
+                        <p><strong>Venue:</strong> ${event.venueName}</p>
+                        <p><strong>Artistas:</strong> ${event.artistNames.join(', ')}</p>
+                        <p><strong>Fecha:</strong> ${event.date ? event.date : 'N/A'}</p>
+                        <p style="font-size: 1.1em; font-weight: bold; color: #10b981;">TOTAL: $${event.totalCost.toFixed(2)}</p>
+                    </div>
+                `;
+                return card;
+            }
+
+            // Initialize
+            loadEvents();
+
+            // Global functions
+            window.editEvent = function(eventId) {
+                // Inline edit form modal for event editing
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const venues = JSON.parse(localStorage.getItem('venues')) || [];
+                const artists = JSON.parse(localStorage.getItem('artists')) || [];
+                const event = events.find(e => e.id === eventId);
+                if (!event) {
+                    alert('Evento no encontrado');
+                    return;
+                }
+
+                // Create modal overlay
+                let modalOverlay = document.getElementById('edit-event-modal-overlay');
+                if (modalOverlay) {
+                    modalOverlay.remove();
+                }
+                modalOverlay = document.createElement('div');
+                modalOverlay.id = 'edit-event-modal-overlay';
+                modalOverlay.style.position = 'fixed';
+                modalOverlay.style.top = '0';
+                modalOverlay.style.left = '0';
+                modalOverlay.style.width = '100%';
+                modalOverlay.style.height = '100%';
+                modalOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modalOverlay.style.display = 'flex';
+                modalOverlay.style.justifyContent = 'center';
+                modalOverlay.style.alignItems = 'center';
+                modalOverlay.style.zIndex = '1000';
+
+                // Create modal content container
+                const modalContent = document.createElement('div');
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.padding = '2rem';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.width = '400px';
+                modalContent.style.maxHeight = '90vh';
+                modalContent.style.overflowY = 'auto';
+
+                // Modal title
+                const title = document.createElement('h2');
+                title.textContent = 'Editar Evento';
+                modalContent.appendChild(title);
+
+                // Event name input
+                const nameLabel = document.createElement('label');
+                nameLabel.textContent = 'Nombre del evento';
+                nameLabel.style.display = 'block';
+                nameLabel.style.marginTop = '1rem';
+                modalContent.appendChild(nameLabel);
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = event.name;
+                nameInput.style.width = '100%';
+                nameInput.style.padding = '0.5rem';
+                nameInput.style.marginTop = '0.25rem';
+                modalContent.appendChild(nameInput);
+
+                // Event date input
+                const dateLabel = document.createElement('label');
+                dateLabel.textContent = 'Fecha del evento';
+                dateLabel.style.display = 'block';
+                dateLabel.style.marginTop = '1rem';
+                modalContent.appendChild(dateLabel);
+
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = event.date || '';
+                dateInput.style.width = '100%';
+                dateInput.style.padding = '0.5rem';
+                dateInput.style.marginTop = '0.25rem';
+                modalContent.appendChild(dateInput);
+
+                // Artists dual listbox UI
+                const artistsContainer = document.createElement('div');
+                artistsContainer.style.marginTop = '1rem';
+                artistsContainer.style.display = 'flex';
+                artistsContainer.style.gap = '1rem';
+
+                // Left box: available artists
+                const availableContainer = document.createElement('div');
+                availableContainer.style.flex = '1';
+                availableContainer.style.display = 'flex';
+                availableContainer.style.flexDirection = 'column';
+
+                const availableLabel = document.createElement('label');
+                availableLabel.textContent = 'Artistas Disponibles';
+                availableLabel.style.fontWeight = 'bold';
+                availableLabel.style.marginBottom = '0.5rem';
+                availableContainer.appendChild(availableLabel);
+
+                const availableSelect = document.createElement('select');
+                availableSelect.multiple = true;
+                availableSelect.size = 10;
+                availableSelect.style.width = '100%';
+                availableContainer.appendChild(availableSelect);
+
+                // Right box: selected artists
+                const selectedContainer = document.createElement('div');
+                selectedContainer.style.flex = '1';
+                selectedContainer.style.display = 'flex';
+                selectedContainer.style.flexDirection = 'column';
+
+                const selectedLabel = document.createElement('label');
+                selectedLabel.textContent = 'Artistas Seleccionados';
+                selectedLabel.style.fontWeight = 'bold';
+                selectedLabel.style.marginBottom = '0.5rem';
+                selectedContainer.appendChild(selectedLabel);
+
+                const selectedSelect = document.createElement('select');
+                selectedSelect.multiple = true;
+                selectedSelect.size = 10;
+                selectedSelect.style.width = '100%';
+                selectedContainer.appendChild(selectedSelect);
+
+                // Buttons container
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.style.display = 'flex';
+                buttonsDiv.style.flexDirection = 'column';
+                buttonsDiv.style.justifyContent = 'center';
+                buttonsDiv.style.gap = '0.5rem';
+
+                const addButton = document.createElement('button');
+                addButton.textContent = '>>';
+                addButton.className = 'btn btn-edit';
+                addButton.style.padding = '0.25rem 0.5rem';
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = '<<';
+                removeButton.className = 'btn btn-edit';
+                removeButton.style.padding = '0.25rem 0.5rem';
+
+                buttonsDiv.appendChild(addButton);
+                buttonsDiv.appendChild(removeButton);
+
+                artistsContainer.appendChild(availableContainer);
+                artistsContainer.appendChild(buttonsDiv);
+                artistsContainer.appendChild(selectedContainer);
+
+                // Populate available and selected lists
+                const selectedArtistSet = new Set(event.artists);
+                artists.forEach(artist => {
+                    const option = document.createElement('option');
+                    option.value = artist.id;
+                    option.textContent = artist.name;
+                    if (selectedArtistSet.has(artist.id)) {
+                        selectedSelect.appendChild(option);
+                    } else {
+                        availableSelect.appendChild(option);
+                    }
+                });
+
+                // Add button click handler
+                addButton.onclick = () => {
+                    const selectedOptions = Array.from(availableSelect.selectedOptions);
+                    selectedOptions.forEach(option => {
+                        availableSelect.removeChild(option);
+                        selectedSelect.appendChild(option);
+                    });
+                };
+
+                // Remove button click handler
+                removeButton.onclick = () => {
+                    const selectedOptions = Array.from(selectedSelect.selectedOptions);
+                    selectedOptions.forEach(option => {
+                        selectedSelect.removeChild(option);
+                        availableSelect.appendChild(option);
+                    });
+                };
+
+                modalContent.appendChild(artistsContainer);
+
+                // Venue select
+                const venueLabel = document.createElement('label');
+                venueLabel.textContent = 'Venue';
+                venueLabel.style.display = 'block';
+                venueLabel.style.marginTop = '1rem';
+                modalContent.appendChild(venueLabel);
+
+                const venueSelect = document.createElement('select');
+                venueSelect.style.width = '100%';
+                venueSelect.style.marginTop = '0.25rem';
+
+                venues.forEach(venue => {
+                    const option = document.createElement('option');
+                    option.value = venue.id;
+                    option.textContent = venue.name;
+                    if (venue.id == event.venue) {
+                        option.selected = true;
+                    }
+                    venueSelect.appendChild(option);
+                });
+                modalContent.appendChild(venueSelect);
+
+
+                // Save and Cancel buttons container
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.style.marginTop = '1.5rem';
+                buttonsContainer.style.display = 'flex';
+                buttonsContainer.style.justifyContent = 'flex-end';
+                buttonsContainer.style.gap = '1rem';
+
+                const saveButton = document.createElement('button');
+                saveButton.textContent = 'Guardar';
+                saveButton.className = 'btn btn-expenses';
+                saveButton.addEventListener('click', () => {
+                    // Validate inputs
+                    if (!nameInput.value.trim()) {
+                        alert('El nombre del evento es obligatorio.');
+                        return;
+                    }
+                    if (!dateInput.value) {
+                        alert('La fecha del evento es obligatoria.');
+                        return;
+                    }
+                    if (!venueSelect.value) {
+                        alert('Debe seleccionar un venue.');
+                        return;
+                    }
+
+                    // Update event object
+                    event.name = nameInput.value.trim();
+                    event.date = dateInput.value;
+                    event.artists = Array.from(selectedSelect.options).map(opt => opt.value);
+                    event.venue = venueSelect.value;
+
+                    // Calculate costs
+                    const venuesData = JSON.parse(localStorage.getItem('venues')) || [];
+                    const artistsData = JSON.parse(localStorage.getItem('artists')) || [];
+                    
+                    // Get venue cost
+                    const selectedVenue = venuesData.find(v => v.id === venueSelect.value);
+                    const venueCost = selectedVenue ? parseFloat(selectedVenue.cost) || 0 : 0;
+                    
+                    // Get artist fees
+                    const artistsFeeSum = event.artists.reduce((sum, artistId) => {
+                        const artist = artistsData.find(a => a.id == artistId);
+                        return sum + (artist ? parseFloat(artist.fee) || 0 : 0);
+                    }, 0);
+
+                    // Update costs in event object
+                    event.venueCost = venueCost;
+                    event.artistFees = artistsFeeSum;
+                    event.totalCost = (event.venueCost || 0) + 
+                                    (event.artistFees || 0) +
+                                    (event.fixedExpenses || 0) +
+                                    (event.productionCost || 0) +
+                                    (event.marketingExpenses || 0) +
+                                    (event.transporteExpenses || 0) +
+                                    (event.miscExpenses || 0) +
+                                    (event.taxExpenses || 0);
+
+                    // Save updated events list
+                    const eventIndex = events.findIndex(e => e.id === eventId);
+                    if (eventIndex !== -1) {
+                        events[eventIndex] = event;
+                        localStorage.setItem('events', JSON.stringify(events));
+                        loadEvents();
+                        modalOverlay.remove();
+                    }
+                });
+                buttonsContainer.appendChild(saveButton);
+
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancelar';
+                cancelButton.className = 'btn btn-move';
+                cancelButton.addEventListener('click', () => {
+                    modalOverlay.remove();
+                });
+                buttonsContainer.appendChild(cancelButton);
+
+                modalContent.appendChild(buttonsContainer);
+
+                modalOverlay.appendChild(modalContent);
+                document.body.appendChild(modalOverlay);
+            };
+
+            window.showExpenses = function(eventId) {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const venues = JSON.parse(localStorage.getItem('venues')) || [];
+                const artists = JSON.parse(localStorage.getItem('artists')) || [];
+                const event = events.find(e => e.id === eventId);
+                if (!event) {
+                    alert('Evento no encontrado');
+                    return;
+                }
+                const venue = venues.find(v => v.id == event.venue);
+                const artistObjs = event.artists.map(artistId => {
+                    return artists.find(a => a.id == artistId) || { id: artistId, name: artistId, fee: 0 };
+                });
+
+                // Open new window for expenses
+                const expensesWindow = window.open('', '_blank', 'width=500,height=700,resizable=yes,scrollbars=yes');
+                if (!expensesWindow) {
+                    alert('No se pudo abrir la ventana de gastos. Por favor, permita ventanas emergentes.');
+                    return;
+                }
+
+                // Build the document content using DOM methods to avoid string literal issues
+                expensesWindow.document.title = 'Gastos para: ' + event.name;
+
+                const style = expensesWindow.document.createElement('style');
+                style.textContent = `
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 1rem;
+                        background: #f9fafb;
+                    }
+                    h2 {
+                        margin-top: 0;
+                    }
+                    label {
+                        display: block;
+                        margin-top: 1rem;
+                        font-weight: bold;
+                    }
+                    input[type="number"] {
+                        width: 100%;
+                        padding: 0.5rem;
+                        margin-top: 0.25rem;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        font-size: 1rem;
+                    }
+                    #total-expenses {
+                        position: fixed;
+                        top: 1rem;
+                        right: 1rem;
+                        background: #10b981;
+                        color: white;
+                        padding: 0.75rem 1rem;
+                        border-radius: 8px;
+                        font-weight: bold;
+                        font-size: 1.25rem;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                    }
+                    button {
+                        margin-top: 1.5rem;
+                        padding: 0.75rem 1.5rem;
+                        background: #ef4444;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    }
+                    button:hover {
+                        background: #b91c1c;
+                    }
+                `;
+                expensesWindow.document.head.appendChild(style);
+
+                const body = expensesWindow.document.body;
+
+                const heading = expensesWindow.document.createElement('h2');
+                heading.textContent = 'Gastos para: ' + event.name;
+                body.appendChild(heading);
+
+                // Fixed Costs Section
+                const fixedCostsHeading = expensesWindow.document.createElement('h3');
+                fixedCostsHeading.textContent = 'Costos Fijos';
+                fixedCostsHeading.style.marginBottom = '1rem';
+                body.appendChild(fixedCostsHeading);
+
+                // Display venue information with cost from venues table
+                const venueDiv = expensesWindow.document.createElement('div');
+                venueDiv.style.padding = '0.5rem';
+                venueDiv.style.backgroundColor = '#f3f4f6';
+                venueDiv.style.borderRadius = '4px';
+                venueDiv.style.marginBottom = '1rem';
+
+                const venueLabel = expensesWindow.document.createElement('div');
+                venueLabel.innerHTML = `<strong>Venue Cost:</strong> ${venue ? venue.name : 'N/A'}`;
+                venueDiv.appendChild(venueLabel);
+
+                const venueCostLabel = expensesWindow.document.createElement('div');
+                const venueCost = venue ? (venue.cost || 0) : 0;
+                venueCostLabel.innerHTML = `<strong>Cost:</strong> <span style="color: #10b981;">$${venueCost.toFixed(2)}</span>`;
+                venueDiv.appendChild(venueCostLabel);
+
+                body.appendChild(venueDiv);
+
+                // Display artist fees section
+                const artistFeesDiv = expensesWindow.document.createElement('div');
+                artistFeesDiv.style.padding = '0.5rem';
+                artistFeesDiv.style.backgroundColor = '#f3f4f6';
+                artistFeesDiv.style.borderRadius = '4px';
+                artistFeesDiv.style.marginBottom = '1rem';
+
+                const artistFeesHeading = expensesWindow.document.createElement('div');
+                artistFeesHeading.innerHTML = '<strong>Artist Fees:</strong>';
+                artistFeesDiv.appendChild(artistFeesHeading);
+
+                let totalArtistFees = 0;
+                artistObjs.forEach(artist => {
+                    const artistFeeDiv = expensesWindow.document.createElement('div');
+                    artistFeeDiv.style.marginTop = '0.5rem';
+                    const artistFee = artist.fee || 0;
+                    totalArtistFees += artistFee;
+                    artistFeeDiv.innerHTML = `${artist.name}: <span style="color: #10b981;">$${artistFee.toFixed(2)}</span>`;
+                    artistFeesDiv.appendChild(artistFeeDiv);
+                });
+
+                const totalArtistFeesDiv = expensesWindow.document.createElement('div');
+                totalArtistFeesDiv.style.marginTop = '0.5rem';
+                totalArtistFeesDiv.style.borderTop = '1px solid #ddd';
+                totalArtistFeesDiv.style.paddingTop = '0.5rem';
+                totalArtistFeesDiv.innerHTML = `<strong>Total Artist Fees:</strong> <span style="color: #10b981;">$${totalArtistFees.toFixed(2)}</span>`;
+                artistFeesDiv.appendChild(totalArtistFeesDiv);
+
+                body.appendChild(artistFeesDiv);
+
+                // Additional Expenses Section
+                const additionalExpensesHeading = expensesWindow.document.createElement('h3');
+                additionalExpensesHeading.textContent = 'Additional Expenses';
+                additionalExpensesHeading.style.marginTop = '2rem';
+                body.appendChild(additionalExpensesHeading);
+
+                const fixedExpenses = [
+                    { id: 'hotel', label: 'Hotel' }
+                ];
+
+                const fixedExpenseInputs = [];
+
+                fixedExpenses.forEach(expense => {
+                    const expenseLabel = expensesWindow.document.createElement('label');
+                    expenseLabel.setAttribute('for', expense.id);
+                    expenseLabel.textContent = expense.label;
+                    body.appendChild(expenseLabel);
+
+                    const expenseInput = expensesWindow.document.createElement('input');
+                    expenseInput.type = 'number';
+                    expenseInput.id = expense.id;
+                    expenseInput.min = '0';
+                    expenseInput.step = '0.01';
+                    expenseInput.value = '';
+                    body.appendChild(expenseInput);
+
+                    fixedExpenseInputs.push(expenseInput);
+                });
+
+                // Add Production Cost section
+                const productionCostHeading = expensesWindow.document.createElement('h3');
+                productionCostHeading.textContent = 'Production Cost';
+                body.appendChild(productionCostHeading);
+
+                const productionCosts = [
+                    { id: 'backline', label: 'Backline' },
+                    { id: 'crew-tecnico', label: 'Crew Tecnico' },
+                    { id: 'productor-tecnico', label: 'Productor Tecnico' },
+                    { id: 'barricada', label: 'Barricada' },
+                    { id: 'door-manager', label: 'Door Manager' },
+                    { id: 'production-assit', label: 'Production Assit' },
+                    { id: 'backstage-manager', label: 'Backstage Manager' },
+                    { id: 'code-scanners', label: 'Code Scanners' },
+                    { id: 'stage-tech-illumination', label: 'Stage Tech Illumination' },
+                    { id: 'rigger', label: 'Rigger' },
+                    { id: 'sound-engineer-tech', label: 'Sound Engineer Tech' },
+                    { id: 'light-programmer-tech', label: 'Light Programmer Tech' },
+                    { id: 'merch-manager', label: 'Merch Manager' },
+                ];
+
+                const productionCostInputs = [];
+
+                productionCosts.forEach(cost => {
+                    const costLabel = expensesWindow.document.createElement('label');
+                    costLabel.setAttribute('for', cost.id);
+                    costLabel.textContent = cost.label;
+                    body.appendChild(costLabel);
+
+                    const costInput = expensesWindow.document.createElement('input');
+                    costInput.type = 'number';
+                    costInput.id = cost.id;
+                    costInput.min = '0';
+                    costInput.step = '0.01';
+                    costInput.value = '';
+                    body.appendChild(costInput);
+
+                    productionCostInputs.push(costInput);
+                });
+
+                // Add Marketing and Content Expenses section
+                const marketingHeading = expensesWindow.document.createElement('h3');
+                marketingHeading.textContent = 'Marketing and Content Expenses';
+                body.appendChild(marketingHeading);
+
+                const marketingExpenses = [
+                    { id: 'redes-publicidad', label: 'Redes y publicidad' },
+                    { id: 'campana', label: 'Campaña' },
+                    { id: 'lithus', label: 'Lithus' },
+                    { id: 'reels', label: 'Reels' },
+                    { id: 'fotografo', label: 'Fotografo' },
+                    { id: 'coordinacion-contenido', label: 'Coordinación Contenido' },
+                    { id: 'real-time-content', label: 'Real Time content' },
+                    { id: 'after-movie', label: 'After Movie' },
+                ];
+
+                const marketingExpenseInputs = [];
+
+                marketingExpenses.forEach(expense => {
+                    const expenseLabel = expensesWindow.document.createElement('label');
+                    expenseLabel.setAttribute('for', expense.id);
+                    expenseLabel.textContent = expense.label;
+                    body.appendChild(expenseLabel);
+
+                    const expenseInput = expensesWindow.document.createElement('input');
+                    expenseInput.type = 'number';
+                    expenseInput.id = expense.id;
+                    expenseInput.min = '0';
+                    expenseInput.step = '0.01';
+                    expenseInput.value = '';
+                    body.appendChild(expenseInput);
+
+                    marketingExpenseInputs.push(expenseInput);
+                });
+
+                // Add Transporte section
+                const transporteHeading = expensesWindow.document.createElement('h3');
+                transporteHeading.textContent = 'Transporte';
+                body.appendChild(transporteHeading);
+
+                const transporteExpenses = [
+                    { id: 'alquiler-carro', label: 'Alquiler Carro' },
+                    { id: 'gasolina-carro', label: 'Gasolina Carro' },
+                    { id: 'transporte-banda', label: 'Transporte Banda' },
+                    { id: 'transporte-cargo', label: 'Transporte Cargo' },
+                    { id: 'boleto-avion-destiny', label: 'Boleto Avion Destiny' },
+                ];
+
+                const transporteExpenseInputs = [];
+
+                transporteExpenses.forEach(expense => {
+                    const expenseLabel = expensesWindow.document.createElement('label');
+                    expenseLabel.setAttribute('for', expense.id);
+                    expenseLabel.textContent = expense.label;
+                    body.appendChild(expenseLabel);
+
+                    const expenseInput = expensesWindow.document.createElement('input');
+                    expenseInput.type = 'number';
+                    expenseInput.id = expense.id;
+                    expenseInput.min = '0';
+                    expenseInput.step = '0.01';
+                    expenseInput.value = '';
+                    body.appendChild(expenseInput);
+
+                    transporteExpenseInputs.push(expenseInput);
+                });
+
+                // Add Miscellaneous section
+                const miscHeading = expensesWindow.document.createElement('h3');
+                miscHeading.textContent = 'Miscellaneous';
+                body.appendChild(miscHeading);
+
+                const miscExpenses = [
+                    { id: 'brazaletes', label: 'Brazaletes' },
+                    { id: 'buy-out', label: 'Buy Out' },
+                    { id: 'mobiliario', label: 'Mobiliario' },
+                    { id: 'catering-hospitality-banda', label: 'Catering/Hospitality Banda' },
+                    { id: 'catering-crew', label: 'Catering Crew' },
+                    { id: 'paramedicos', label: 'Paramedicos' },
+                    { id: 'imprevistos', label: 'Imprevistos' },
+                ];
+
+                const miscExpenseInputs = [];
+
+                miscExpenses.forEach(expense => {
+                    const expenseLabel = expensesWindow.document.createElement('label');
+                    expenseLabel.setAttribute('for', expense.id);
+                    expenseLabel.textContent = expense.label;
+                    body.appendChild(expenseLabel);
+
+                    const expenseInput = expensesWindow.document.createElement('input');
+                    expenseInput.type = 'number';
+                    expenseInput.id = expense.id;
+                    expenseInput.min = '0';
+                    expenseInput.step = '0.01';
+                    expenseInput.value = '';
+                    body.appendChild(expenseInput);
+
+                    miscExpenseInputs.push(expenseInput);
+                });
+
+                // Taxes section
+                const taxesHeading = expensesWindow.document.createElement('h3');
+                taxesHeading.textContent = 'Impuestos';
+                body.appendChild(taxesHeading);
+
+                const taxes = [
+                    { id: 'espectaculos-publicos', label: 'Espectaculos Publicos' },
+                    { id: 'acam', label: 'ACAM' },
+                    { id: 'municipalidad', label: 'Municipalidad' },
+                    { id: 'hacienda', label: 'Hacienda' },
+                    { id: 'gestion-permisos', label: 'Gestion de Permisos' },
+                ];
+
+                const taxInputs = [];
+
+                taxes.forEach(tax => {
+                    const taxLabel = expensesWindow.document.createElement('label');
+                    taxLabel.setAttribute('for', tax.id);
+                    taxLabel.textContent = tax.label;
+                    body.appendChild(taxLabel);
+
+                    const taxInput = expensesWindow.document.createElement('input');
+                    taxInput.type = 'number';
+                    taxInput.id = tax.id;
+                    taxInput.min = '0';
+                    taxInput.step = '0.01';
+                    taxInput.value = '';
+                    body.appendChild(taxInput);
+
+                    taxInputs.push(taxInput);
+                });
+
+                // Add Save and Cancel buttons container at the end
+                const buttonsContainer = expensesWindow.document.createElement('div');
+                buttonsContainer.style.marginTop = '2rem';
+                buttonsContainer.style.display = 'flex';
+                buttonsContainer.style.justifyContent = 'flex-end';
+                buttonsContainer.style.gap = '1rem';
+                buttonsContainer.style.position = 'sticky';
+                buttonsContainer.style.bottom = '1rem';
+                buttonsContainer.style.backgroundColor = 'white';
+                buttonsContainer.style.padding = '1rem';
+                buttonsContainer.style.borderTop = '1px solid #e5e5e5';
+
+                const saveBtn = expensesWindow.document.createElement('button');
+                saveBtn.textContent = 'Guardar';
+                saveBtn.style.backgroundColor = '#10b981';
+                saveBtn.style.color = 'white';
+                saveBtn.style.border = 'none';
+                saveBtn.style.borderRadius = '4px';
+                saveBtn.style.padding = '0.5rem 1rem';
+                saveBtn.style.cursor = 'pointer';
+                saveBtn.addEventListener('click', () => {
+                    try {
+                        // Get current events and find the target event
+                        const events = JSON.parse(localStorage.getItem('events')) || [];
+                        const eventIndex = events.findIndex(e => e.id === event.id);
+                        if (eventIndex === -1) {
+                            throw new Error('Evento no encontrado para guardar');
+                        }
+
+                        // Fixed costs
+                        const venueCost = venue ? parseFloat(venue.cost) || 0 : 0;
+                        const artistFees = artistObjs.reduce((sum, artist) => sum + (parseFloat(artist.fee) || 0), 0);
+
+                        // Additional expenses
+                        const fixedTotal = fixedExpenseInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        const productionTotal = productionCostInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        const marketingTotal = marketingExpenseInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        const transporteTotal = transporteExpenseInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        const miscTotal = miscExpenseInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        const taxTotal = taxInputs.reduce((sum, input) => {
+                            const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                            return sum + (value || 0);
+                        }, 0);
+
+                        // Calculate total including fixed costs
+                        const totalCost = venueCost + artistFees + fixedTotal + productionTotal + 
+                                        marketingTotal + transporteTotal + miscTotal + taxTotal;
+
+                        // Update event with all expense data
+                        events[eventIndex] = {
+                            ...events[eventIndex],
+                            venueCost,
+                            artistFees,
+                            fixedExpenses: fixedTotal,
+                            productionCost: productionTotal,
+                            marketingExpenses: marketingTotal,
+                            transporteExpenses: transporteTotal,
+                            miscExpenses: miscTotal,
+                            taxExpenses: taxTotal,
+                            totalCost
+                        };
+
+                        // Save to localStorage
+                        localStorage.setItem('events', JSON.stringify(events));
+
+                        alert('Gastos guardados correctamente');
+                        expensesWindow.close();
+                        
+                        // Refresh the events list to update totals
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.location.reload();
+                        }
+                    } catch (error) {
+                        alert('Error al guardar: ' + error.message);
+                    }
+                });
+                buttonsContainer.appendChild(saveBtn);
+
+                const cancelBtn = expensesWindow.document.createElement('button');
+                cancelBtn.textContent = 'Cancelar';
+                cancelBtn.style.backgroundColor = '#ef4444';
+                cancelBtn.style.color = 'white';
+                cancelBtn.style.border = 'none';
+                cancelBtn.style.borderRadius = '4px';
+                cancelBtn.style.padding = '0.5rem 1rem';
+                cancelBtn.style.cursor = 'pointer';
+                cancelBtn.addEventListener('click', () => {
+                    expensesWindow.close();
+                });
+                buttonsContainer.appendChild(cancelBtn);
+
+                body.appendChild(buttonsContainer);
+
+                // Create total box in upper right corner
+                const totalBox = expensesWindow.document.createElement('div');
+                totalBox.id = 'total-expenses';
+                totalBox.style.position = 'fixed';
+                totalBox.style.top = '1rem';
+                totalBox.style.right = '1rem';
+                totalBox.style.backgroundColor = '#10b981';
+                totalBox.style.color = 'white';
+                totalBox.style.padding = '1rem 2rem';
+                totalBox.style.borderRadius = '8px';
+                totalBox.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+                totalBox.style.zIndex = '1000';
+                totalBox.style.fontSize = '1.2em';
+                totalBox.style.fontWeight = 'bold';
+                body.appendChild(totalBox);
+
+                function calculateTotal() {
+                    // Fixed costs (always included)
+                    const venueCost = venue ? parseFloat(venue.cost) || 0 : 0;
+                    const artistFees = artistObjs.reduce((sum, artist) => sum + (parseFloat(artist.fee) || 0), 0);
+
+                    // Additional expenses (from input fields)
+                    const fixedTotal = fixedExpenseInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    const productionTotal = productionCostInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    const marketingTotal = marketingExpenseInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    const transporteTotal = transporteExpenseInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    const miscTotal = miscExpenseInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    const taxTotal = taxInputs.reduce((sum, input) => {
+                        const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                        return sum + (value || 0);
+                    }, 0);
+
+                    // Calculate grand total including fixed costs
+                    const grandTotal = venueCost + artistFees + fixedTotal + productionTotal + 
+                                     marketingTotal + transporteTotal + miscTotal + taxTotal;
+
+                    // Update total display
+                    totalBox.textContent = `TOTAL: $${grandTotal.toFixed(2)}`;
+                }
+
+                // Add input event listeners to all inputs
+                const allInputs = [
+                    ...fixedExpenseInputs,
+                    ...productionCostInputs,
+                    ...marketingExpenseInputs,
+                    ...transporteExpenseInputs,
+                    ...miscExpenseInputs,
+                    ...taxInputs
+                ];
+
+                allInputs.forEach(input => {
+                    input.addEventListener('input', calculateTotal);
+                });
+
+                // Initialize total display
+                calculateTotal();
+            };
+
+            window.closeExpensesModal = function() {
+                const modal = document.getElementById('expenses-modal');
+                const overlay = document.getElementById('expenses-modal-overlay');
+                if (modal) modal.remove();
+                if (overlay) overlay.remove();
+            };
+
+            window.toggleDropdown = function(eventId) {
+                document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                    if (dropdown.id !== `dropdown-${eventId}`) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+                document.getElementById(`dropdown-${eventId}`).classList.toggle('show');
+            };
+
+            window.moveEvent = function(eventId, status) {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const eventIndex = events.findIndex(e => e.id === eventId);
+                if (eventIndex !== -1) {
+                    events[eventIndex].status = status;
+                    localStorage.setItem('events', JSON.stringify(events));
+                    loadEvents();
+                }
+                document.getElementById(`dropdown-${eventId}`).classList.remove('show');
+            };
+
+            window.archiveEvent = function(eventId) {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const eventIndex = events.findIndex(e => e.id === eventId);
+                if (eventIndex !== -1) {
+                    events[eventIndex].status = 'archivado';
+                    localStorage.setItem('events', JSON.stringify(events));
+                    loadEvents();
+                }
+            };
+
+            window.deleteEvent = function(eventId) {
+                if (!confirm('¿Está seguro de que desea eliminar este evento?')) {
+                    return;
+                }
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const newEvents = events.filter(e => e.id !== eventId);
+                localStorage.setItem('events', JSON.stringify(newEvents));
+                loadEvents();
+            };
+
+            // Close dropdowns when clicking outside
+            window.addEventListener('click', function(e) {
+                if (!e.target.matches('.btn-move')) {
+                    document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                        if (dropdown.classList.contains('show')) {
+                            dropdown.classList.remove('show');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Listen for localStorage changes to update event cards dynamically
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'events') {
+                loadEvents();
+            }
+        });
+    </script>
+</body>
+</html>
