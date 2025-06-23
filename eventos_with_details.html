@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- Previous content remains unchanged until showExpenses function -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.showExpenses = function(eventId) {
+            const events = JSON.parse(localStorage.getItem('events')) || [];
+            const event = events.find(e => e.id === eventId);
+            if (!event) {
+                alert('Evento no encontrado');
+                return;
+            }
+
+            // Initialize expense details if they don't exist
+            if (!event.expenseDetails) {
+                event.expenseDetails = {
+                    fixed: {},
+                    production: {},
+                    marketing: {},
+                    transporte: {},
+                    misc: {},
+                    tax: {}
+                };
+            }
+
+            // Rest of the showExpenses function implementation
+            // ... (previous code)
+
+            fixedExpenses.forEach(expense => {
+                const expenseLabel = expensesWindow.document.createElement('label');
+                expenseLabel.setAttribute('for', expense.id);
+                expenseLabel.textContent = expense.label;
+                body.appendChild(expenseLabel);
+
+                const expenseInput = expensesWindow.document.createElement('input');
+                expenseInput.type = 'number';
+                expenseInput.id = expense.id;
+                expenseInput.min = '0';
+                expenseInput.step = '0.01';
+                // Load saved value if it exists
+                expenseInput.value = event.expenseDetails.fixed[expense.id] || '';
+                body.appendChild(expenseInput);
+
+                fixedExpenseInputs.push(expenseInput);
+            });
+
+            // Similar changes for other expense sections
+            productionCosts.forEach(cost => {
+                // ... (previous code)
+                costInput.value = event.expenseDetails.production[cost.id] || '';
+                // ... (rest of code)
+            });
+
+            marketingExpenses.forEach(expense => {
+                // ... (previous code)
+                expenseInput.value = event.expenseDetails.marketing[expense.id] || '';
+                // ... (rest of code)
+            });
+
+            transporteExpenses.forEach(expense => {
+                // ... (previous code)
+                expenseInput.value = event.expenseDetails.transporte[expense.id] || '';
+                // ... (rest of code)
+            });
+
+            miscExpenses.forEach(expense => {
+                // ... (previous code)
+                expenseInput.value = event.expenseDetails.misc[expense.id] || '';
+                // ... (rest of code)
+            });
+
+            taxes.forEach(tax => {
+                // ... (previous code)
+                taxInput.value = event.expenseDetails.tax[tax.id] || '';
+                // ... (rest of code)
+            });
+
+            saveBtn.addEventListener('click', () => {
+                try {
+                    // Get current events and find the target event
+                    const events = JSON.parse(localStorage.getItem('events')) || [];
+                    const eventIndex = events.findIndex(e => e.id === event.id);
+                    if (eventIndex === -1) {
+                        throw new Error('Evento no encontrado para guardar');
+                    }
+
+                    // Save detailed expense data
+                    event.expenseDetails = {
+                        fixed: {},
+                        production: {},
+                        marketing: {},
+                        transporte: {},
+                        misc: {},
+                        tax: {}
+                    };
+
+                    // Save individual expense values
+                    fixedExpenseInputs.forEach((input, index) => {
+                        const expenseId = fixedExpenses[index].id;
+                        event.expenseDetails.fixed[expenseId] = input.value;
+                    });
+
+                    productionCostInputs.forEach((input, index) => {
+                        const costId = productionCosts[index].id;
+                        event.expenseDetails.production[costId] = input.value;
+                    });
+
+                    marketingExpenseInputs.forEach((input, index) => {
+                        const expenseId = marketingExpenses[index].id;
+                        event.expenseDetails.marketing[expenseId] = input.value;
+                    });
+
+                    transporteExpenseInputs.forEach((input, index) => {
+                        const expenseId = transporteExpenses[index].id;
+                        event.expenseDetails.transporte[expenseId] = input.value;
+                    });
+
+                    miscExpenseInputs.forEach((input, index) => {
+                        const expenseId = miscExpenses[index].id;
+                        event.expenseDetails.misc[expenseId] = input.value;
+                    });
+
+                    taxInputs.forEach((input, index) => {
+                        const taxId = taxes[index].id;
+                        event.expenseDetails.tax[taxId] = input.value;
+                    });
+
+                    // Calculate totals
+                    const fixedTotal = Object.values(event.expenseDetails.fixed)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const productionTotal = Object.values(event.expenseDetails.production)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const marketingTotal = Object.values(event.expenseDetails.marketing)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const transporteTotal = Object.values(event.expenseDetails.transporte)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const miscTotal = Object.values(event.expenseDetails.misc)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const taxTotal = Object.values(event.expenseDetails.tax)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+
+                    // Update event with totals
+                    events[eventIndex] = {
+                        ...event,
+                        fixedExpenses: fixedTotal,
+                        productionCost: productionTotal,
+                        marketingExpenses: marketingTotal,
+                        transporteExpenses: transporteTotal,
+                        miscExpenses: miscTotal,
+                        taxExpenses: taxTotal,
+                        totalCost: fixedTotal + productionTotal + marketingTotal + 
+                                 transporteTotal + miscTotal + taxTotal
+                    };
+
+                    // Save to localStorage
+                    localStorage.setItem('events', JSON.stringify(events));
+                    alert('Gastos guardados correctamente');
+                    expensesWindow.close();
+                    loadEvents();
+                } catch (error) {
+                    alert('Error al guardar: ' + error.message);
+                }
+            });
+
+            // Rest of the function remains unchanged
+        };
+    });
+</script>
+</html>
