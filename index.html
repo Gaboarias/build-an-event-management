@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Build an Event - Bienvenida</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --accent-color: #3b82f6;
+            --background-light: #ffffff;
+            --text-color-light: #1a1a1a;
+            --border-color: #e5e5e5;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-light);
+            color: var(--text-color-light);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 2rem;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            background: var(--accent-color);
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bienvenido a Build an Event</h2>
+        <a href="registration.html" class="btn">Registrarse</a>
+        <a href="login.html" class="btn">Iniciar Sesión</a>
+    </div>
+</body>
+</html>
