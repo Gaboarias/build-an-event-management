@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Build an Event - Eventos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Previous styles remain unchanged -->
+</head>
+<body>
+    <nav class="nav">
+        <!-- Previous navigation remains unchanged -->
+    </nav>
+
+    <div class="container">
+        <!-- Previous container content remains unchanged -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Previous functions remain unchanged until showExpenses
+
+            window.showExpenses = function(eventId) {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const venues = JSON.parse(localStorage.getItem('venues')) || [];
+                const artists = JSON.parse(localStorage.getItem('artists')) || [];
+                const event = events.find(e => e.id === eventId);
+                if (!event) {
+                    alert('Evento no encontrado');
+                    return;
+                }
+
+                // Initialize expense details if they don't exist
+                if (!event.expenseDetails) {
+                    event.expenseDetails = {
+                        fixed: {},
+                        production: {},
+                        marketing: {},
+                        transporte: {},
+                        misc: {},
+                        tax: {}
+                    };
+                }
+
+                // Rest of the showExpenses function implementation
+                // ... (previous window creation and styling code)
+
+                fixedExpenses.forEach(expense => {
+                    // ... (previous label creation code)
+
+                    const expenseInput = expensesWindow.document.createElement('input');
+                    expenseInput.type = 'number';
+                    expenseInput.id = expense.id;
+                    expenseInput.min = '0';
+                    expenseInput.step = '0.01';
+                    expenseInput.value = event.expenseDetails.fixed[expense.id] || '';
+                    body.appendChild(expenseInput);
+
+                    fixedExpenseInputs.push(expenseInput);
+                });
+
+                // Similar changes for other expense sections
+                productionCosts.forEach(cost => {
+                    // ... (previous label creation code)
+                    costInput.value = event.expenseDetails.production[cost.id] || '';
+                });
+
+                marketingExpenses.forEach(expense => {
+                    // ... (previous label creation code)
+                    expenseInput.value = event.expenseDetails.marketing[expense.id] || '';
+                });
+
+                transporteExpenses.forEach(expense => {
+                    // ... (previous label creation code)
+                    expenseInput.value = event.expenseDetails.transporte[expense.id] || '';
+                });
+
+                miscExpenses.forEach(expense => {
+                    // ... (previous label creation code)
+                    expenseInput.value = event.expenseDetails.misc[expense.id] || '';
+                });
+
+                taxes.forEach(tax => {
+                    // ... (previous label creation code)
+                    taxInput.value = event.expenseDetails.tax[tax.id] || '';
+                });
+
+                // Save button click handler
+                saveBtn.addEventListener('click', () => {
+                    try {
+                        // Get current events and find the target event
+                        const events = JSON.parse(localStorage.getItem('events')) || [];
+                        const eventIndex = events.findIndex(e => e.id === event.id);
+                        if (eventIndex === -1) {
+                            throw new Error('Evento no encontrado para guardar');
+                        }
+
+                        // Save detailed expense data
+                        const expenseDetails = {
+                            fixed: {},
+                            production: {},
+                            marketing: {},
+                            transporte: {},
+                            misc: {},
+                            tax: {}
+                        };
+
+                        // Save individual expense values
+                        fixedExpenseInputs.forEach((input, index) => {
+                            expenseDetails.fixed[fixedExpenses[index].id] = input.value;
+                        });
+
+                        productionCostInputs.forEach((input, index) => {
+                            expenseDetails.production[productionCosts[index].id] = input.value;
+                        });
+
+                        marketingExpenseInputs.forEach((input, index) => {
+                            expenseDetails.marketing[marketingExpenses[index].id] = input.value;
+                        });
+
+                        transporteExpenseInputs.forEach((input, index) => {
+                            expenseDetails.transporte[transporteExpenses[index].id] = input.value;
+                        });
+
+                        miscExpenseInputs.forEach((input, index) => {
+                            expenseDetails.misc[miscExpenses[index].id] = input.value;
+                        });
+
+                        taxInputs.forEach((input, index) => {
+                            expenseDetails.tax[taxes[index].id] = input.value;
+                        });
+
+                        // Calculate totals
+                        const fixedTotal = Object.values(expenseDetails.fixed)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                        const productionTotal = Object.values(expenseDetails.production)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                        const marketingTotal = Object.values(expenseDetails.marketing)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                        const transporteTotal = Object.values(expenseDetails.transporte)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                        const miscTotal = Object.values(expenseDetails.misc)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                        const taxTotal = Object.values(expenseDetails.tax)
+                            .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+
+                        // Update event with totals and expense details
+                        events[eventIndex] = {
+                            ...events[eventIndex],
+                            venueCost,
+                            artistFees,
+                            fixedExpenses: fixedTotal,
+                            productionCost: productionTotal,
+                            marketingExpenses: marketingTotal,
+                            transporteExpenses: transporteTotal,
+                            miscExpenses: miscTotal,
+                            taxExpenses: taxTotal,
+                            totalCost: venueCost + artistFees + fixedTotal + productionTotal + 
+                                     marketingTotal + transporteTotal + miscTotal + taxTotal,
+                            expenseDetails
+                        };
+
+                        // Save to localStorage
+                        localStorage.setItem('events', JSON.stringify(events));
+                        alert('Gastos guardados correctamente');
+                        expensesWindow.close();
+                        loadEvents();
+                    } catch (error) {
+                        alert('Error al guardar: ' + error.message);
+                    }
+                });
+
+                // Rest of the function remains unchanged
+            };
+
+            // Rest of the code remains unchanged
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- Previous content remains unchanged until showExpenses function -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.showExpenses = function(eventId) {
+            const events = JSON.parse(localStorage.getItem('events')) || [];
+            const venues = JSON.parse(localStorage.getItem('venues')) || [];
+            const artists = JSON.parse(localStorage.getItem('artists')) || [];
+            const event = events.find(e => e.id === eventId);
+            if (!event) {
+                alert('Evento no encontrado');
+                return;
+            }
+
+            // Initialize expense details if they don't exist
+            if (!event.expenseDetails) {
+                event.expenseDetails = {
+                    fixed: {},
+                    production: {},
+                    marketing: {},
+                    transporte: {},
+                    misc: {},
+                    tax: {}
+                };
+            }
+
+            // Open new window for expenses
+            const expensesWindow = window.open('', '_blank', 'width=500,height=700,resizable=yes,scrollbars=yes');
+            if (!expensesWindow) {
+                alert('No se pudo abrir la ventana de gastos. Por favor, permita ventanas emergentes.');
+                return;
+            }
+
+            // Build the document content using DOM methods
+            expensesWindow.document.title = 'Gastos para: ' + event.name;
+
+            // Add styles
+            const style = expensesWindow.document.createElement('style');
+            style.textContent = `
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 1rem;
+                    background: #f9fafb;
+                }
+                h2 { margin-top: 0; }
+                label {
+                    display: block;
+                    margin-top: 1rem;
+                    font-weight: bold;
+                }
+                input[type="number"] {
+                    width: 100%;
+                    padding: 0.5rem;
+                    margin-top: 0.25rem;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    font-size: 1rem;
+                }
+                #total-expenses {
+                    position: fixed;
+                    top: 1rem;
+                    right: 1rem;
+                    background: #10b981;
+                    color: white;
+                    padding: 0.75rem 1rem;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    font-size: 1.25rem;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                }
+                button {
+                    margin-top: 1.5rem;
+                    padding: 0.75rem 1.5rem;
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                }
+                button:hover {
+                    background: #b91c1c;
+                }
+            `;
+            expensesWindow.document.head.appendChild(style);
+
+            const body = expensesWindow.document.body;
+
+            // Add heading
+            const heading = expensesWindow.document.createElement('h2');
+            heading.textContent = 'Gastos para: ' + event.name;
+            body.appendChild(heading);
+
+            // Fixed Costs Section
+            const fixedCostsHeading = expensesWindow.document.createElement('h3');
+            fixedCostsHeading.textContent = 'Costos Fijos';
+            fixedCostsHeading.style.marginBottom = '1rem';
+            body.appendChild(fixedCostsHeading);
+
+            // Display venue information
+            const venueDiv = expensesWindow.document.createElement('div');
+            venueDiv.style.padding = '0.5rem';
+            venueDiv.style.backgroundColor = '#f3f4f6';
+            venueDiv.style.borderRadius = '4px';
+            venueDiv.style.marginBottom = '1rem';
+
+            const venue = venues.find(v => v.id == event.venue);
+            const venueName = venue ? venue.name : 'N/A';
+            const venueCost = venue ? (venue.cost || 0) : 0;
+
+            venueDiv.innerHTML = `
+                <div><strong>Venue:</strong> ${venueName}</div>
+                <div><strong>Cost:</strong> <span style="color: #10b981;">$${venueCost.toFixed(2)}</span></div>
+            `;
+            body.appendChild(venueDiv);
+
+            // Artist Fees Section
+            const artistFeesDiv = expensesWindow.document.createElement('div');
+            artistFeesDiv.style.padding = '0.5rem';
+            artistFeesDiv.style.backgroundColor = '#f3f4f6';
+            artistFeesDiv.style.borderRadius = '4px';
+            artistFeesDiv.style.marginBottom = '1rem';
+
+            const artistFeesHeading = expensesWindow.document.createElement('div');
+            artistFeesHeading.innerHTML = '<strong>Artist Fees:</strong>';
+            artistFeesDiv.appendChild(artistFeesHeading);
+
+            let totalArtistFees = 0;
+            const artistObjs = event.artists.map(artistId => {
+                return artists.find(a => a.id == artistId) || { id: artistId, name: artistId, fee: 0 };
+            });
+
+            artistObjs.forEach(artist => {
+                const artistFeeDiv = expensesWindow.document.createElement('div');
+                artistFeeDiv.style.marginTop = '0.5rem';
+                const artistFee = artist.fee || 0;
+                totalArtistFees += artistFee;
+                artistFeeDiv.innerHTML = `${artist.name}: <span style="color: #10b981;">$${artistFee.toFixed(2)}</span>`;
+                artistFeesDiv.appendChild(artistFeeDiv);
+            });
+
+            const totalArtistFeesDiv = expensesWindow.document.createElement('div');
+            totalArtistFeesDiv.style.marginTop = '0.5rem';
+            totalArtistFeesDiv.style.borderTop = '1px solid #ddd';
+            totalArtistFeesDiv.style.paddingTop = '0.5rem';
+            totalArtistFeesDiv.innerHTML = `<strong>Total Artist Fees:</strong> <span style="color: #10b981;">$${totalArtistFees.toFixed(2)}</span>`;
+            artistFeesDiv.appendChild(totalArtistFeesDiv);
+
+            body.appendChild(artistFeesDiv);
+
+            // Additional Expenses Section
+            const additionalExpensesHeading = expensesWindow.document.createElement('h3');
+            additionalExpensesHeading.textContent = 'Additional Expenses';
+            additionalExpensesHeading.style.marginTop = '2rem';
+            body.appendChild(additionalExpensesHeading);
+
+            const fixedExpenses = [
+                { id: 'hotel', label: 'Hotel' }
+            ];
+
+            const fixedExpenseInputs = [];
+
+            fixedExpenses.forEach(expense => {
+                const expenseLabel = expensesWindow.document.createElement('label');
+                expenseLabel.setAttribute('for', expense.id);
+                expenseLabel.textContent = expense.label;
+                body.appendChild(expenseLabel);
+
+                const expenseInput = expensesWindow.document.createElement('input');
+                expenseInput.type = 'number';
+                expenseInput.id = expense.id;
+                expenseInput.min = '0';
+                expenseInput.step = '0.01';
+                expenseInput.value = event.expenseDetails.fixed[expense.id] || '';
+                body.appendChild(expenseInput);
+
+                fixedExpenseInputs.push(expenseInput);
+            });
+
+            // Production Cost section
+            const productionCostHeading = expensesWindow.document.createElement('h3');
+            productionCostHeading.textContent = 'Production Cost';
+            body.appendChild(productionCostHeading);
+
+            const productionCosts = [
+                { id: 'backline', label: 'Backline' },
+                { id: 'crew-tecnico', label: 'Crew Tecnico' },
+                { id: 'productor-tecnico', label: 'Productor Tecnico' },
+                { id: 'barricada', label: 'Barricada' },
+                { id: 'door-manager', label: 'Door Manager' },
+                { id: 'production-assit', label: 'Production Assit' },
+                { id: 'backstage-manager', label: 'Backstage Manager' },
+                { id: 'code-scanners', label: 'Code Scanners' },
+                { id: 'stage-tech-illumination', label: 'Stage Tech Illumination' },
+                { id: 'rigger', label: 'Rigger' },
+                { id: 'sound-engineer-tech', label: 'Sound Engineer Tech' },
+                { id: 'light-programmer-tech', label: 'Light Programmer Tech' },
+                { id: 'merch-manager', label: 'Merch Manager' }
+            ];
+
+            const productionCostInputs = [];
+
+            productionCosts.forEach(cost => {
+                const costLabel = expensesWindow.document.createElement('label');
+                costLabel.setAttribute('for', cost.id);
+                costLabel.textContent = cost.label;
+                body.appendChild(costLabel);
+
+                const costInput = expensesWindow.document.createElement('input');
+                costInput.type = 'number';
+                costInput.id = cost.id;
+                costInput.min = '0';
+                costInput.step = '0.01';
+                costInput.value = event.expenseDetails.production[cost.id] || '';
+                body.appendChild(costInput);
+
+                productionCostInputs.push(costInput);
+            });
+
+            // Marketing and Content Expenses section
+            const marketingHeading = expensesWindow.document.createElement('h3');
+            marketingHeading.textContent = 'Marketing and Content Expenses';
+            body.appendChild(marketingHeading);
+
+            const marketingExpenses = [
+                { id: 'redes-publicidad', label: 'Redes y publicidad' },
+                { id: 'campana', label: 'Campaña' },
+                { id: 'lithus', label: 'Lithus' },
+                { id: 'reels', label: 'Reels' },
+                { id: 'fotografo', label: 'Fotografo' },
+                { id: 'coordinacion-contenido', label: 'Coordinación Contenido' },
+                { id: 'real-time-content', label: 'Real Time content' },
+                { id: 'after-movie', label: 'After Movie' }
+            ];
+
+            const marketingExpenseInputs = [];
+
+            marketingExpenses.forEach(expense => {
+                const expenseLabel = expensesWindow.document.createElement('label');
+                expenseLabel.setAttribute('for', expense.id);
+                expenseLabel.textContent = expense.label;
+                body.appendChild(expenseLabel);
+
+                const expenseInput = expensesWindow.document.createElement('input');
+                expenseInput.type = 'number';
+                expenseInput.id = expense.id;
+                expenseInput.min = '0';
+                expenseInput.step = '0.01';
+                expenseInput.value = event.expenseDetails.marketing[expense.id] || '';
+                body.appendChild(expenseInput);
+
+                marketingExpenseInputs.push(expenseInput);
+            });
+
+            // Transporte section
+            const transporteHeading = expensesWindow.document.createElement('h3');
+            transporteHeading.textContent = 'Transporte';
+            body.appendChild(transporteHeading);
+
+            const transporteExpenses = [
+                { id: 'alquiler-carro', label: 'Alquiler Carro' },
+                { id: 'gasolina-carro', label: 'Gasolina Carro' },
+                { id: 'transporte-banda', label: 'Transporte Banda' },
+                { id: 'transporte-cargo', label: 'Transporte Cargo' },
+                { id: 'boleto-avion-destiny', label: 'Boleto Avion Destiny' }
+            ];
+
+            const transporteExpenseInputs = [];
+
+            transporteExpenses.forEach(expense => {
+                const expenseLabel = expensesWindow.document.createElement('label');
+                expenseLabel.setAttribute('for', expense.id);
+                expenseLabel.textContent = expense.label;
+                body.appendChild(expenseLabel);
+
+                const expenseInput = expensesWindow.document.createElement('input');
+                expenseInput.type = 'number';
+                expenseInput.id = expense.id;
+                expenseInput.min = '0';
+                expenseInput.step = '0.01';
+                expenseInput.value = event.expenseDetails.transporte[expense.id] || '';
+                body.appendChild(expenseInput);
+
+                transporteExpenseInputs.push(expenseInput);
+            });
+
+            // Miscellaneous section
+            const miscHeading = expensesWindow.document.createElement('h3');
+            miscHeading.textContent = 'Miscellaneous';
+            body.appendChild(miscHeading);
+
+            const miscExpenses = [
+                { id: 'brazaletes', label: 'Brazaletes' },
+                { id: 'buy-out', label: 'Buy Out' },
+                { id: 'mobiliario', label: 'Mobiliario' },
+                { id: 'catering-hospitality-banda', label: 'Catering/Hospitality Banda' },
+                { id: 'catering-crew', label: 'Catering Crew' },
+                { id: 'paramedicos', label: 'Paramedicos' },
+                { id: 'imprevistos', label: 'Imprevistos' }
+            ];
+
+            const miscExpenseInputs = [];
+
+            miscExpenses.forEach(expense => {
+                const expenseLabel = expensesWindow.document.createElement('label');
+                expenseLabel.setAttribute('for', expense.id);
+                expenseLabel.textContent = expense.label;
+                body.appendChild(expenseLabel);
+
+                const expenseInput = expensesWindow.document.createElement('input');
+                expenseInput.type = 'number';
+                expenseInput.id = expense.id;
+                expenseInput.min = '0';
+                expenseInput.step = '0.01';
+                expenseInput.value = event.expenseDetails.misc[expense.id] || '';
+                body.appendChild(expenseInput);
+
+                miscExpenseInputs.push(expenseInput);
+            });
+
+            // Taxes section
+            const taxesHeading = expensesWindow.document.createElement('h3');
+            taxesHeading.textContent = 'Impuestos';
+            body.appendChild(taxesHeading);
+
+            const taxes = [
+                { id: 'espectaculos-publicos', label: 'Espectaculos Publicos' },
+                { id: 'acam', label: 'ACAM' },
+                { id: 'municipalidad', label: 'Municipalidad' },
+                { id: 'hacienda', label: 'Hacienda' },
+                { id: 'gestion-permisos', label: 'Gestion de Permisos' }
+            ];
+
+            const taxInputs = [];
+
+            taxes.forEach(tax => {
+                const taxLabel = expensesWindow.document.createElement('label');
+                taxLabel.setAttribute('for', tax.id);
+                taxLabel.textContent = tax.label;
+                body.appendChild(taxLabel);
+
+                const taxInput = expensesWindow.document.createElement('input');
+                taxInput.type = 'number';
+                taxInput.id = tax.id;
+                taxInput.min = '0';
+                taxInput.step = '0.01';
+                taxInput.value = event.expenseDetails.tax[tax.id] || '';
+                body.appendChild(taxInput);
+
+                taxInputs.push(taxInput);
+            });
+
+            // Add Save and Cancel buttons
+            const buttonsContainer = expensesWindow.document.createElement('div');
+            buttonsContainer.style.marginTop = '2rem';
+            buttonsContainer.style.display = 'flex';
+            buttonsContainer.style.justifyContent = 'flex-end';
+            buttonsContainer.style.gap = '1rem';
+            buttonsContainer.style.position = 'sticky';
+            buttonsContainer.style.bottom = '1rem';
+            buttonsContainer.style.backgroundColor = 'white';
+            buttonsContainer.style.padding = '1rem';
+            buttonsContainer.style.borderTop = '1px solid #e5e5e5';
+
+            const saveBtn = expensesWindow.document.createElement('button');
+            saveBtn.textContent = 'Guardar';
+            saveBtn.style.backgroundColor = '#10b981';
+            saveBtn.style.color = 'white';
+            saveBtn.style.border = 'none';
+            saveBtn.style.borderRadius = '4px';
+            saveBtn.style.padding = '0.5rem 1rem';
+            saveBtn.style.cursor = 'pointer';
+
+            saveBtn.addEventListener('click', () => {
+                try {
+                    // Get current events and find the target event
+                    const events = JSON.parse(localStorage.getItem('events')) || [];
+                    const eventIndex = events.findIndex(e => e.id === event.id);
+                    if (eventIndex === -1) {
+                        throw new Error('Evento no encontrado para guardar');
+                    }
+
+                    // Save detailed expense data
+                    const expenseDetails = {
+                        fixed: {},
+                        production: {},
+                        marketing: {},
+                        transporte: {},
+                        misc: {},
+                        tax: {}
+                    };
+
+                    // Save individual expense values
+                    fixedExpenseInputs.forEach((input, index) => {
+                        expenseDetails.fixed[fixedExpenses[index].id] = input.value;
+                    });
+
+                    productionCostInputs.forEach((input, index) => {
+                        expenseDetails.production[productionCosts[index].id] = input.value;
+                    });
+
+                    marketingExpenseInputs.forEach((input, index) => {
+                        expenseDetails.marketing[marketingExpenses[index].id] = input.value;
+                    });
+
+                    transporteExpenseInputs.forEach((input, index) => {
+                        expenseDetails.transporte[transporteExpenses[index].id] = input.value;
+                    });
+
+                    miscExpenseInputs.forEach((input, index) => {
+                        expenseDetails.misc[miscExpenses[index].id] = input.value;
+                    });
+
+                    taxInputs.forEach((input, index) => {
+                        expenseDetails.tax[taxes[index].id] = input.value;
+                    });
+
+                    // Calculate totals
+                    const fixedTotal = Object.values(expenseDetails.fixed)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const productionTotal = Object.values(expenseDetails.production)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const marketingTotal = Object.values(expenseDetails.marketing)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const transporteTotal = Object.values(expenseDetails.transporte)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const miscTotal = Object.values(expenseDetails.misc)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+                    const taxTotal = Object.values(expenseDetails.tax)
+                        .reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
+
+                    // Update event with totals and expense details
+                    events[eventIndex] = {
+                        ...events[eventIndex],
+                        venueCost,
+                        artistFees: totalArtistFees,
+                        fixedExpenses: fixedTotal,
+                        productionCost: productionTotal,
+                        marketingExpenses: marketingTotal,
+                        transporteExpenses: transporteTotal,
+                        miscExpenses: miscTotal,
+                        taxExpenses: taxTotal,
+                        totalCost: venueCost + totalArtistFees + fixedTotal + productionTotal + 
+                                 marketingTotal + transporteTotal + miscTotal + taxTotal,
+                        expenseDetails
+                    };
+
+                    // Save to localStorage
+                    localStorage.setItem('events', JSON.stringify(events));
+                    alert('Gastos guardados correctamente');
+                    expensesWindow.close();
+                    loadEvents();
+                } catch (error) {
+                    alert('Error al guardar: ' + error.message);
+                }
+            });
+
+            buttonsContainer.appendChild(saveBtn);
+
+            const cancelBtn = expensesWindow.document.createElement('button');
+            cancelBtn.textContent = 'Cancelar';
+            cancelBtn.style.backgroundColor = '#ef4444';
+            cancelBtn.style.color = 'white';
+            cancelBtn.style.border = 'none';
+            cancelBtn.style.borderRadius = '4px';
+            cancelBtn.style.padding = '0.5rem 1rem';
+            cancelBtn.style.cursor = 'pointer';
+            cancelBtn.addEventListener('click', () => {
+                expensesWindow.close();
+            });
+            buttonsContainer.appendChild(cancelBtn);
+
+            body.appendChild(buttonsContainer);
+
+            // Create total box in upper right corner
+            const totalBox = expensesWindow.document.createElement('div');
+            totalBox.id = 'total-expenses';
+            totalBox.style.position = 'fixed';
+            totalBox.style.top = '1rem';
+            totalBox.style.right = '1rem';
+            totalBox.style.backgroundColor = '#10b981';
+            totalBox.style.color = 'white';
+            totalBox.style.padding = '1rem 2rem';
+            totalBox.style.borderRadius = '8px';
+            totalBox.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+            totalBox.style.zIndex = '1000';
+            totalBox.style.fontSize = '1.2em';
+            totalBox.style.fontWeight = 'bold';
+            body.appendChild(totalBox);
+
+            function calculateTotal() {
+                // Fixed costs (always included)
+                const venueCost = venue ? parseFloat(venue.cost) || 0 : 0;
+                const artistFees = artistObjs.reduce((sum, artist) => sum + (parseFloat(artist.fee) || 0), 0);
+
+                // Additional expenses (from input fields)
+                const fixedTotal = fixedExpenseInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                const productionTotal = productionCostInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                const marketingTotal = marketingExpenseInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                const transporteTotal = transporteExpenseInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                const miscTotal = miscExpenseInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                const taxTotal = taxInputs.reduce((sum, input) => {
+                    const value = input.value.trim() === '' ? 0 : parseFloat(input.value);
+                    return sum + (value || 0);
+                }, 0);
+
+                // Calculate grand total including fixed costs
+                const grandTotal = venueCost + artistFees + fixedTotal + productionTotal + 
+                                 marketingTotal + transporteTotal + miscTotal + taxTotal;
+
+                // Update total display
+                totalBox.textContent = `TOTAL: $${grandTotal.toFixed(2)}`;
+            }
+
+            // Add input event listeners to all inputs
+            const allInputs = [
+                ...fixedExpenseInputs,
+                ...productionCostInputs,
+                ...marketingExpenseInputs,
+                ...transporteExpenseInputs,
+                ...miscExpenseInputs,
+                ...taxInputs
+            ];
+
+            allInputs.forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+
+            // Initialize total display
+            calculateTotal();
+        };
+    });
+</script>
+</html>
