@@ -217,18 +217,38 @@ export default function Dashboard({ initialConfig, type }: Props) {
           {/* Simulador */}
           <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
             <h2 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Simulador de ventas</h2>
-            <div style={{ display: 'grid', gap: 16 }}>
+            <div style={{ display: 'grid', gap: 14 }}>
               {([
-                { label: `General — ${gen} / ${cfg.cap_gen}`, val: gen, set: setGen, max: cfg.cap_gen, step: 5 },
-                { label: `VIP — ${vip} / ${cfg.cap_vip}`, val: vip, set: setVip, max: cfg.cap_vip, step: 5 },
-                { label: `Lounge individual — ${li} / ${cfg.cap_lounge}`, val: li, set: setLi, max: cfg.cap_lounge, step: 1 },
-                { label: `Mesas Lounge — ${lm} mesas (${lm*3} personas)`, val: lm, set: setLm, max: 8, step: 1 },
+                { label: 'General', val: gen, set: setGen, max: cfg.cap_gen, step: 1, bigStep: 5 },
+                { label: 'VIP', val: vip, set: setVip, max: cfg.cap_vip, step: 1, bigStep: 5 },
+                { label: 'Lounge individual', val: li, set: setLi, max: cfg.cap_lounge, step: 1, bigStep: 1 },
+                { label: 'Mesas Lounge', val: lm, set: setLm, max: 8, step: 1, bigStep: 1, sub: `${lm * 3} personas` },
               ]).map(s => (
                 <div key={s.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{s.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
+                    <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{s.sub ?? `${s.val} / ${s.max}`}</span>
                   </div>
-                  <input type="range" min={0} max={s.max} value={s.val} step={s.step} onChange={e => s.set(+e.target.value)} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      onClick={() => s.set(Math.max(0, s.val - s.bigStep))}
+                      style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, fontWeight: 300, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >−</button>
+                    <div style={{ flex: 1, position: 'relative', height: 36, background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)', overflow: 'hidden', cursor: 'pointer' }}
+                      onClick={e => {
+                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                        const ratio = (e.clientX - rect.left) / rect.width;
+                        s.set(Math.round(ratio * s.max));
+                      }}
+                    >
+                      <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${s.max > 0 ? (s.val / s.max) * 100 : 0}%`, background: 'var(--accent)', opacity: 0.25, transition: 'width 0.15s ease' }} />
+                      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{s.val}</span>
+                    </div>
+                    <button
+                      onClick={() => s.set(Math.min(s.max, s.val + s.bigStep))}
+                      style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, fontWeight: 300, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >+</button>
+                  </div>
                 </div>
               ))}
             </div>
