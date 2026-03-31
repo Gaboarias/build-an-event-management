@@ -1,0 +1,9 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#0A0A0A"/>
+  <g transform="translate(64, 28)">
+    <rect x="0" y="0" width="72" height="72" rx="7" fill="#A30B2E"/>
+    <polygon points="43,10 24,38 34,38 28,62 50,30 39,30" fill="#FFFFFF"/>
+  </g>
+  <text x="100" y="134" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF" letter-spacing="8">RIOT</text>
+  <text x="100" y="158" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#666666" letter-spacing="4">MEDIA HOUSE</text>
+</svg>

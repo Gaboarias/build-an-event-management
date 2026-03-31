@@ -1,0 +1,149 @@
+import { sql } from '@vercel/postgres';
+
+export type EventType = 'event' | 'seminar';
+
+export interface EventConfig {
+  id: number;
+  event_name: string;
+  type: EventType;
+  price_gen: number;
+  price_vip: number;
+  price_lounge_ind: number;
+  price_lounge_mesa: number;
+  costo_neto: number;
+  cap_gen: number;
+  cap_vip: number;
+  cap_lounge: number;
+  updated_at: string;
+}
+
+export interface EventListItem {
+  id: number;
+  event_name: string;
+  type: EventType;
+  updated_at: string;
+}
+
+export interface SalesSnapshot {
+  id: number;
+  event_id: number;
+  label: string;
+  qty_gen: number;
+  qty_vip: number;
+  qty_lounge_ind: number;
+  qty_lounge_mesa: number;
+  ingreso: number;
+  pl: number;
+  created_at: string;
+}
+
+export async function getAllEvents(): Promise<EventListItem[]> {
+  const { rows } = await sql<EventListItem>`
+    SELECT id, event_name, type, updated_at FROM event_config ORDER BY id
+  `;
+  return rows;
+}
+
+export async function getConfig(eventId: number): Promise<EventConfig> {
+  const { rows } = await sql<EventConfig>`
+    SELECT * FROM event_config WHERE id = ${eventId}
+  `;
+  return rows[0];
+}
+
+export async function createEvent(eventName: string): Promise<EventConfig> {
+  const { rows } = await sql<EventConfig>`
+    INSERT INTO event_config (event_name, type)
+    VALUES (${eventName}, 'event')
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function createSeminar(eventName: string): Promise<EventConfig> {
+  const { rows } = await sql<EventConfig>`
+    INSERT INTO event_config (event_name, type)
+    VALUES (${eventName}, 'seminar')
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteEvent(eventId: number): Promise<void> {
+  await sql`DELETE FROM event_config WHERE id = ${eventId}`;
+}
+
+export async function updateConfig(eventId: number, data: Partial<EventConfig>): Promise<EventConfig> {
+  const { rows } = await sql<EventConfig>`
+    UPDATE event_config SET
+      price_gen        = COALESCE(${data.price_gen ?? null}, price_gen),
+      price_vip        = COALESCE(${data.price_vip ?? null}, price_vip),
+      price_lounge_ind = COALESCE(${data.price_lounge_ind ?? null}, price_lounge_ind),
+      price_lounge_mesa= COALESCE(${data.price_lounge_mesa ?? null}, price_lounge_mesa),
+      costo_neto       = COALESCE(${data.costo_neto ?? null}, costo_neto),
+      cap_gen          = COALESCE(${data.cap_gen ?? null}, cap_gen),
+      cap_vip          = COALESCE(${data.cap_vip ?? null}, cap_vip),
+      cap_lounge       = COALESCE(${data.cap_lounge ?? null}, cap_lounge),
+      event_name       = COALESCE(${data.event_name ?? null}, event_name),
+      updated_at       = NOW()
+    WHERE id = ${eventId}
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getSnapshots(eventId: number): Promise<SalesSnapshot[]> {
+  const { rows } = await sql<SalesSnapshot>`
+    SELECT * FROM sales_snapshot WHERE event_id = ${eventId} ORDER BY created_at DESC
+  `;
+  return rows;
+}
+
+export async function saveSnapshot(s: Omit<SalesSnapshot, 'id' | 'created_at'>): Promise<SalesSnapshot> {
+  const { rows } = await sql<SalesSnapshot>`
+    INSERT INTO sales_snapshot (event_id, label, qty_gen, qty_vip, qty_lounge_ind, qty_lounge_mesa, ingreso, pl)
+    VALUES (${s.event_id}, ${s.label}, ${s.qty_gen}, ${s.qty_vip}, ${s.qty_lounge_ind}, ${s.qty_lounge_mesa}, ${s.ingreso}, ${s.pl})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteSnapshot(id: number): Promise<void> {
+  await sql`DELETE FROM sales_snapshot WHERE id = ${id}`;
+}
+
+export interface Expense {
+  id: number;
+  event_id: number;
+  category: string;
+  label: string | null;
+  amount: number;
+  created_at: string;
+}
+
+export async function getExpenses(eventId: number): Promise<Expense[]> {
+  const { rows } = await sql<Expense>`
+    SELECT * FROM expenses WHERE event_id = ${eventId} ORDER BY category, created_at
+  `;
+  return rows;
+}
+
+export async function saveExpense(e: Omit<Expense, 'id' | 'created_at'>): Promise<Expense> {
+  const { rows } = await sql<Expense>`
+    INSERT INTO expenses (event_id, category, label, amount)
+    VALUES (${e.event_id}, ${e.category}, ${e.label ?? null}, ${e.amount})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function updateExpense(id: number, amount: number, label: string | null): Promise<Expense> {
+  const { rows } = await sql<Expense>`
+    UPDATE expenses SET amount = ${amount}, label = ${label ?? null} WHERE id = ${id} RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteExpense(id: number): Promise<void> {
+  await sql`DELETE FROM expenses WHERE id = ${id}`;
+}
