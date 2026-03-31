@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { EventConfig, EventType, SalesSnapshot, Expense } from '@/lib/db';
 import SalesSheet from './SalesSheet';
 
@@ -43,6 +44,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [currency, setCurrency] = useState<'CRC' | 'USD'>('CRC');
   const [exchangeRate, setExchangeRate] = useState(540);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const router = useRouter();
 
   // Persist currency preference in localStorage
   useEffect(() => {
@@ -112,24 +116,51 @@ export default function Dashboard({ initialConfig, type }: Props) {
   async function saveConfig() {
     setSaving(true);
     try {
-      // Convert price inputs back to CRC before saving
-      const payload = { ...draft };
-      if (currency === 'USD') {
-        payload.price_gen          = fromCurrent(draft.price_gen);
-        payload.price_vip          = fromCurrent(draft.price_vip);
-        payload.price_lounge_ind   = fromCurrent(draft.price_lounge_ind);
-        payload.price_lounge_mesa  = fromCurrent(draft.price_lounge_mesa);
-      }
+      // draft always stores values in CRC — no currency conversion needed here.
+      // (price inputs convert USD → CRC via onChange before updating draft)
       const r = await fetch('/api/config', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ...payload }),
+        body: JSON.stringify({ eventId, ...draft }),
       });
       if (!r.ok) { alert('Error al guardar. Verificá la conexión a la base de datos.'); return; }
-      setCfg(await r.json());
+      const saved = await r.json();
+      setCfg(saved);
+      setDraft(saved); // re-sync draft from DB response to prevent stale values
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally { setSaving(false); }
+  }
+
+  async function handleEventAction(action: 'paused' | 'cancelled' | 'delete') {
+    const labels: Record<string, string> = {
+      paused:    '¿Pausar este evento? Seguirá visible pero marcado como pausado.',
+      cancelled: '¿Cancelar este evento? Quedará marcado como cancelado.',
+      delete:    '¿Eliminar este evento permanentemente? Esta acción no se puede deshacer.',
+    };
+    if (!confirm(labels[action])) return;
+    setActionLoading(true);
+    try {
+      if (action === 'delete') {
+        const r = await fetch('/api/config', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId }),
+        });
+        if (!r.ok) { alert('Error al eliminar.'); return; }
+        router.push('/');
+      } else {
+        const r = await fetch('/api/config', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, status: action }),
+        });
+        if (!r.ok) { alert('Error al actualizar estado.'); return; }
+        const updated = await r.json();
+        setCfg(updated);
+        setDraft(updated);
+      }
+    } finally { setActionLoading(false); }
   }
 
   async function saveSnap() {
@@ -207,7 +238,11 @@ export default function Dashboard({ initialConfig, type }: Props) {
             <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
             <Link href="/" style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textDecoration: 'none' }}>← inicio</Link>
           </div>
-          <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{cfg.event_name} · {typeLabel}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+            <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{cfg.event_name} · {typeLabel}</p>
+            {cfg.status === 'paused' && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '0.5px solid #fbbf24', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>PAUSADO</span>}
+            {cfg.status === 'cancelled' && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(248,113,113,0.15)', color: 'var(--red)', border: '0.5px solid var(--red)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>CANCELADO</span>}
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
@@ -309,7 +344,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </div>
             </div>
 
-            <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
+            <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
               <button
                 onClick={saveConfig}
                 disabled={saving}
@@ -317,6 +352,51 @@ export default function Dashboard({ initialConfig, type }: Props) {
               >
                 {saving ? 'Guardando…' : saved ? '✓ Cambios guardados' : 'Guardar ajustes'}
               </button>
+              {cfg.status !== 'active' && (
+                <button
+                  onClick={() => handleEventAction('paused' /* reactivate = back to active via a different path */)}
+                  style={{ padding: '10px 20px', borderRadius: 8, background: 'rgba(52,211,153,0.1)', border: '0.5px solid var(--green)', color: 'var(--green)', fontFamily: 'var(--font-mono)', fontSize: 13, cursor: 'pointer' }}
+                >
+                  Reactivar evento
+                </button>
+              )}
+            </div>
+
+            {/* Event status badge */}
+            {cfg.status !== 'active' && (
+              <div style={{ marginTop: 10, padding: '8px 14px', borderRadius: 8, background: cfg.status === 'cancelled' ? 'rgba(248,113,113,0.1)' : 'rgba(251,191,36,0.1)', border: `0.5px solid ${cfg.status === 'cancelled' ? 'var(--red)' : '#fbbf24'}`, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: cfg.status === 'cancelled' ? 'var(--red)' : '#fbbf24', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {cfg.status === 'cancelled' ? '✕ Evento cancelado' : '⏸ Evento pausado'}
+                </span>
+              </div>
+            )}
+
+            {/* Danger zone */}
+            <div style={{ marginTop: 24, borderTop: '0.5px solid rgba(248,113,113,0.3)', paddingTop: 16 }}>
+              <p style={{ fontSize: 10, color: 'var(--red)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, opacity: 0.7 }}>Zona de peligro</p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => handleEventAction('paused')}
+                  disabled={actionLoading || cfg.status === 'paused'}
+                  style={{ padding: '9px 18px', borderRadius: 8, background: 'rgba(251,191,36,0.08)', border: '0.5px solid #fbbf24', color: '#fbbf24', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', opacity: (actionLoading || cfg.status === 'paused') ? 0.4 : 1, fontWeight: 600 }}
+                >
+                  ⏸ Pausar evento
+                </button>
+                <button
+                  onClick={() => handleEventAction('cancelled')}
+                  disabled={actionLoading || cfg.status === 'cancelled'}
+                  style={{ padding: '9px 18px', borderRadius: 8, background: 'rgba(248,113,113,0.08)', border: '0.5px solid var(--red)', color: 'var(--red)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', opacity: (actionLoading || cfg.status === 'cancelled') ? 0.4 : 1, fontWeight: 600 }}
+                >
+                  ✕ Cancelar evento
+                </button>
+                <button
+                  onClick={() => handleEventAction('delete')}
+                  disabled={actionLoading}
+                  style={{ padding: '9px 18px', borderRadius: 8, background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)', color: 'var(--red)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', opacity: actionLoading ? 0.4 : 1, fontWeight: 700 }}
+                >
+                  🗑 Eliminar evento
+                </button>
+              </div>
             </div>
           </section>
         )}

@@ -2,10 +2,13 @@ import { sql } from '@vercel/postgres';
 
 export type EventType = 'event' | 'seminar';
 
+export type EventStatus = 'active' | 'paused' | 'cancelled';
+
 export interface EventConfig {
   id: number;
   event_name: string;
   type: EventType;
+  status: EventStatus;
   price_gen: number;
   price_vip: number;
   price_lounge_ind: number;
@@ -76,16 +79,26 @@ export async function deleteEvent(eventId: number): Promise<void> {
 export async function updateConfig(eventId: number, data: Partial<EventConfig>): Promise<EventConfig> {
   const { rows } = await sql<EventConfig>`
     UPDATE event_config SET
-      price_gen        = COALESCE(${data.price_gen ?? null}, price_gen),
-      price_vip        = COALESCE(${data.price_vip ?? null}, price_vip),
-      price_lounge_ind = COALESCE(${data.price_lounge_ind ?? null}, price_lounge_ind),
-      price_lounge_mesa= COALESCE(${data.price_lounge_mesa ?? null}, price_lounge_mesa),
-      costo_neto       = COALESCE(${data.costo_neto ?? null}, costo_neto),
-      cap_gen          = COALESCE(${data.cap_gen ?? null}, cap_gen),
-      cap_vip          = COALESCE(${data.cap_vip ?? null}, cap_vip),
-      cap_lounge       = COALESCE(${data.cap_lounge ?? null}, cap_lounge),
-      event_name       = COALESCE(${data.event_name ?? null}, event_name),
+      price_gen        = COALESCE(${data.price_gen        ?? null}::integer, price_gen),
+      price_vip        = COALESCE(${data.price_vip        ?? null}::integer, price_vip),
+      price_lounge_ind = COALESCE(${data.price_lounge_ind ?? null}::integer, price_lounge_ind),
+      price_lounge_mesa= COALESCE(${data.price_lounge_mesa?? null}::integer, price_lounge_mesa),
+      costo_neto       = COALESCE(${data.costo_neto       ?? null}::integer, costo_neto),
+      cap_gen          = COALESCE(${data.cap_gen          ?? null}::integer, cap_gen),
+      cap_vip          = COALESCE(${data.cap_vip          ?? null}::integer, cap_vip),
+      cap_lounge       = COALESCE(${data.cap_lounge       ?? null}::integer, cap_lounge),
+      event_name       = COALESCE(${data.event_name       ?? null}, event_name),
+      status           = COALESCE(${data.status           ?? null}, status),
       updated_at       = NOW()
+    WHERE id = ${eventId}
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function updateEventStatus(eventId: number, status: EventStatus): Promise<EventConfig> {
+  const { rows } = await sql<EventConfig>`
+    UPDATE event_config SET status = ${status}, updated_at = NOW()
     WHERE id = ${eventId}
     RETURNING *
   `;

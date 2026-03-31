@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getConfig, updateConfig, createEvent, createSeminar } from '@/lib/db';
+import { getConfig, updateConfig, createEvent, createSeminar, deleteEvent } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,6 +20,18 @@ export async function PATCH(req: NextRequest) {
     const config = await updateConfig(eventId, data);
     return NextResponse.json(config);
   } catch (e) {
+    return NextResponse.json({ error: 'DB error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { eventId } = await req.json();
+    if (!eventId) return NextResponse.json({ error: 'eventId required' }, { status: 400 });
+    await deleteEvent(eventId);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: 'DB error' }, { status: 500 });
   }
 }
