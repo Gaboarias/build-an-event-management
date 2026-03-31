@@ -11,11 +11,6 @@ interface Props {
 
 const EXPENSE_CATEGORIES = ['Luces y Sonido', 'Alquiler', 'Transporte', 'Luchador', 'Vuelo', 'Grabacion', 'Sillas', 'Estadia'];
 
-function fmt(n: number, sign = true) {
-  const s = sign && n >= 0 ? '+' : '';
-  return `${s}₡${Math.abs(n).toLocaleString('es-CR')}`;
-}
-
 function calcRev(gen: number, vip: number, li: number, mesas: number, p: EventConfig) {
   return gen * p.price_gen + vip * p.price_vip + li * p.price_lounge_ind + mesas * p.price_lounge_mesa;
 }
@@ -43,16 +38,55 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [newExpAmount, setNewExpAmount] = useState('');
   const [addingExp, setAddingExp] = useState(false);
 
-  const eventId = initialConfig.id;
+  // Settings panel
+  const [showSettings, setShowSettings] = useState(false);
+  const [currency, setCurrency] = useState<'CRC' | 'USD'>('CRC');
+  const [exchangeRate, setExchangeRate] = useState(540);
+
+  // Persist currency preference in localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(`wem-currency-${initialConfig.id}`);
+    const rate  = localStorage.getItem(`wem-rate-${initialConfig.id}`);
+    if (saved === 'USD') setCurrency('USD');
+    if (rate) setExchangeRate(Number(rate));
+  }, [initialConfig.id]);
+
+  function handleCurrencyChange(c: 'CRC' | 'USD') {
+    setCurrency(c);
+    localStorage.setItem(`wem-currency-${initialConfig.id}`, c);
+  }
+  function handleRateChange(r: number) {
+    setExchangeRate(r);
+    localStorage.setItem(`wem-rate-${initialConfig.id}`, String(r));
+  }
+
+  // Currency helpers
+  const sym = currency === 'USD' ? '$' : '₡';
+  const locale = currency === 'USD' ? 'en-US' : 'es-CR';
+  const decimals = currency === 'USD' ? 2 : 0;
+
+  function toCurrent(crc: number) {
+    return currency === 'USD' ? crc / exchangeRate : crc;
+  }
+  function fromCurrent(val: number) {
+    return currency === 'USD' ? val * exchangeRate : val;
+  }
+  function money(crc: number, signed = false) {
+    const val = toCurrent(crc);
+    const s = signed && crc >= 0 ? '+' : '';
+    const formatted = Math.abs(val).toLocaleString(locale, { maximumFractionDigits: decimals, minimumFractionDigits: 0 });
+    return `${s}${sym}${formatted}`;
+  }
+
+  const eventId  = initialConfig.id;
   const costNeto = expenses.reduce((s, e) => s + e.amount, 0);
 
   const rev  = calcRev(gen, vip, li, lm, cfg);
   const pl   = rev - costNeto;
   const pers = gen + vip + li + lm * 3;
-  const avg  = pers > 0 ? Math.round(rev / pers) : 0;
   const pct  = costNeto > 0 ? Math.min((rev / costNeto) * 100, 100) : 0;
 
-  const plColor = pl > 5000 ? 'var(--green)' : pl >= -20000 ? 'var(--amber)' : 'var(--red)';
+  const plColor  = pl > 5000 ? 'var(--green)' : pl >= -20000 ? 'var(--amber)' : 'var(--red)';
   const barColor = pl > 5000 ? '#34d399' : pl >= -20000 ? '#fbbf24' : '#f87171';
   const typeLabel = type === 'seminar' ? 'seminario' : 'evento';
 
@@ -77,10 +111,18 @@ export default function Dashboard({ initialConfig, type }: Props) {
   async function saveConfig() {
     setSaving(true);
     try {
+      // Convert price inputs back to CRC before saving
+      const payload = { ...draft };
+      if (currency === 'USD') {
+        payload.price_gen          = fromCurrent(draft.price_gen);
+        payload.price_vip          = fromCurrent(draft.price_vip);
+        payload.price_lounge_ind   = fromCurrent(draft.price_lounge_ind);
+        payload.price_lounge_mesa  = fromCurrent(draft.price_lounge_mesa);
+      }
       const r = await fetch('/api/config', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ...draft }),
+        body: JSON.stringify({ eventId, ...payload }),
       });
       if (!r.ok) { alert('Error al guardar. Verificá la conexión a la base de datos.'); return; }
       setCfg(await r.json());
@@ -111,10 +153,11 @@ export default function Dashboard({ initialConfig, type }: Props) {
     if (!effectiveCat || !amount || amount <= 0) return;
     setAddingExp(true);
     try {
+      const rawAmount = currency === 'USD' ? Math.round(amount * exchangeRate) : amount;
       const r = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId, category: effectiveCat, label: newExpLabel.trim() || null, amount }),
+        body: JSON.stringify({ event_id: eventId, category: effectiveCat, label: newExpLabel.trim() || null, amount: rawAmount }),
       });
       if (!r.ok) { alert('Error al agregar gasto.'); return; }
       setNewExpLabel('');
@@ -132,11 +175,26 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const GENE_STEPS   = [40,50,60,70,80,90,100];
   const LOUNGE_STEPS = [0,5,10,15,20,25];
 
-  // Group expenses by category for display
   const expByCategory = EXPENSE_CATEGORIES.map(cat => ({
     cat,
     rows: expenses.filter(e => e.category === cat),
   })).filter(g => g.rows.length > 0);
+
+  // Price draft values in current currency (for display in inputs)
+  const draftInCurrency = {
+    price_gen:         Math.round(toCurrent(draft.price_gen)),
+    price_vip:         Math.round(toCurrent(draft.price_vip)),
+    price_lounge_ind:  Math.round(toCurrent(draft.price_lounge_ind)),
+    price_lounge_mesa: Math.round(toCurrent(draft.price_lounge_mesa)),
+  };
+
+  const btnBase: React.CSSProperties = {
+    width: 36, height: 36, borderRadius: 8,
+    background: 'var(--bg3)', border: '0.5px solid var(--border2)',
+    color: 'var(--text)', fontSize: 18, fontWeight: 300,
+    cursor: 'pointer', flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -150,18 +208,125 @@ export default function Dashboard({ initialConfig, type }: Props) {
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{cfg.event_name} · {typeLabel}</p>
         </div>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => setShowSettings(s => !s)}
+            style={{
+              background: showSettings ? 'var(--accent)' : 'var(--bg2)',
+              border: '0.5px solid var(--border2)',
+              color: showSettings ? '#fff' : 'var(--muted)',
+              borderRadius: 8, padding: '6px 14px',
+              fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            ⚙ Ajustes
+          </button>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)' }} />
+        </div>
       </header>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px', display: 'grid', gap: 24 }}>
 
+        {/* Settings Panel */}
+        {showSettings && (
+          <section style={{ background: 'var(--bg2)', border: '1px solid var(--accent)', borderRadius: 12, padding: 20 }}>
+            <h2 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>
+              ⚙ Ajustes del evento
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+
+              {/* Capacity */}
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Aforo disponible por zona</p>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {([
+                    { key: 'cap_gen',    label: 'General — máx. entradas' },
+                    { key: 'cap_vip',    label: 'VIP — máx. entradas' },
+                    { key: 'cap_lounge', label: 'Lounge individual — máx. entradas' },
+                  ] as const).map(f => (
+                    <div key={f.key}>
+                      <label style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: 4 }}>{f.label}</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button style={btnBase} onClick={() => setDraft(d => ({ ...d, [f.key]: Math.max(0, d[f.key] - 1) }))}>−</button>
+                        <input
+                          type="number"
+                          value={draft[f.key]}
+                          min={0}
+                          step={1}
+                          onChange={e => setDraft(d => ({ ...d, [f.key]: +e.target.value }))}
+                          style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: 16 }}
+                        />
+                        <button style={btnBase} onClick={() => setDraft(d => ({ ...d, [f.key]: d[f.key] + 1 }))}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Currency */}
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Moneda de trabajo</p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  {(['CRC', 'USD'] as const).map(c => (
+                    <button
+                      key={c}
+                      onClick={() => handleCurrencyChange(c)}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 8,
+                        background: currency === c ? 'var(--accent)' : 'var(--bg3)',
+                        color: currency === c ? '#fff' : 'var(--muted)',
+                        border: currency === c ? '1px solid var(--accent)' : '0.5px solid var(--border2)',
+                        fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                      }}
+                    >
+                      {c === 'CRC' ? '₡ Colones' : '$ Dólares'}
+                    </button>
+                  ))}
+                </div>
+                {currency === 'USD' && (
+                  <div>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: 4 }}>Tipo de cambio (₡ por $1 USD)</label>
+                    <input
+                      type="number"
+                      value={exchangeRate}
+                      min={1}
+                      step={1}
+                      onChange={e => handleRateChange(+e.target.value)}
+                      style={{ width: '100%', textAlign: 'center', fontWeight: 700, fontSize: 16 }}
+                    />
+                    <p style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 6 }}>
+                      Todos los montos se muestran en dólares. Los datos se guardan en colones.
+                    </p>
+                  </div>
+                )}
+                {currency === 'CRC' && (
+                  <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.5 }}>
+                    Todos los montos se muestran en colones costarricenses (₡). Cambiá a dólares para ver una conversión automática.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
+              <button
+                onClick={saveConfig}
+                disabled={saving}
+                style={{ background: saved ? 'var(--green)' : 'var(--accent)', color: '#fff', opacity: saving ? 0.6 : 1, padding: '10px 24px', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 13, cursor: 'pointer', border: 'none' }}
+              >
+                {saving ? 'Guardando…' : saved ? '✓ Cambios guardados' : 'Guardar ajustes'}
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {[
-            { label: 'Gastos', value: `₡${costNeto.toLocaleString('es-CR')}`, color: 'var(--accent2)' },
-            { label: 'Ingresos proyectados', value: `₡${rev.toLocaleString('es-CR')}`, color: 'var(--text)' },
-            { label: 'P&L', value: fmt(pl), color: plColor },
-            { label: 'Personas', value: pers.toString(), color: 'var(--text)' },
+            { label: 'Gastos',               value: money(costNeto),      color: 'var(--accent2)' },
+            { label: 'Ingresos proyectados', value: money(rev),           color: 'var(--text)' },
+            { label: 'P&L',                  value: money(pl, true),      color: plColor },
+            { label: 'Personas',             value: pers.toString(),      color: 'var(--text)' },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
               <p style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{k.label}</p>
@@ -176,7 +341,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
             <div style={{ width: `${pct.toFixed(1)}%`, height: '100%', background: barColor, borderRadius: 4, transition: 'width 0.3s ease, background 0.3s ease' }} />
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 6 }}>
-            {pct.toFixed(1)}% del costo cubierto — costo neto ₡{costNeto.toLocaleString('es-CR')}
+            {pct.toFixed(1)}% del costo cubierto — costo neto {money(costNeto)}
           </p>
         </div>
 
@@ -184,21 +349,26 @@ export default function Dashboard({ initialConfig, type }: Props) {
 
           {/* Precios editables */}
           <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
-            <h2 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Configuración de precios</h2>
+            <h2 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Configuración de precios
+              <span style={{ marginLeft: 8, padding: '2px 6px', background: 'var(--bg3)', borderRadius: 4, fontSize: 9, color: 'var(--muted)', border: '0.5px solid var(--border2)' }}>
+                {currency === 'USD' ? '$ USD' : '₡ CRC'}
+              </span>
+            </h2>
             <div style={{ display: 'grid', gap: 12 }}>
               {([
-                { key: 'price_gen',         label: 'General (₡)',               note: `Máx ${draft.cap_gen}` },
-                { key: 'price_vip',         label: 'VIP (₡)',                   note: `Máx ${draft.cap_vip}` },
-                { key: 'price_lounge_ind',  label: 'Lounge individual (₡)',     note: `Máx ${draft.cap_lounge}` },
-                { key: 'price_lounge_mesa', label: 'Mesa Lounge / 3 pers (₡)', note: `≈ ₡${Math.round(draft.price_lounge_mesa/3).toLocaleString('es-CR')}/persona` },
+                { key: 'price_gen',         label: `General (${sym})`,               note: `Máx ${draft.cap_gen} personas` },
+                { key: 'price_vip',         label: `VIP (${sym})`,                   note: `Máx ${draft.cap_vip} personas` },
+                { key: 'price_lounge_ind',  label: `Lounge individual (${sym})`,     note: `Máx ${draft.cap_lounge} personas` },
+                { key: 'price_lounge_mesa', label: `Mesa Lounge / 3 pers (${sym})`,  note: `≈ ${sym}${Math.round(toCurrent(draft.price_lounge_mesa)/3).toLocaleString(locale, { maximumFractionDigits: decimals })}/persona` },
               ] as const).map(f => (
                 <div key={f.key}>
                   <label style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: 4 }}>{f.label}</label>
                   <input
                     type="number"
-                    value={draft[f.key]}
-                    onChange={e => setDraft(d => ({ ...d, [f.key]: +e.target.value }))}
-                    step={500}
+                    value={draftInCurrency[f.key]}
+                    onChange={e => setDraft(d => ({ ...d, [f.key]: currency === 'USD' ? Math.round(+e.target.value * exchangeRate) : +e.target.value }))}
+                    step={currency === 'USD' ? 1 : 500}
                     min={0}
                   />
                   <p style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 3 }}>{f.note}</p>
@@ -219,10 +389,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
             <h2 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Simulador de ventas</h2>
             <div style={{ display: 'grid', gap: 14 }}>
               {([
-                { label: 'General', val: gen, set: setGen, max: cfg.cap_gen, step: 1, bigStep: 5 },
-                { label: 'VIP', val: vip, set: setVip, max: cfg.cap_vip, step: 1, bigStep: 5 },
-                { label: 'Lounge individual', val: li, set: setLi, max: cfg.cap_lounge, step: 1, bigStep: 1 },
-                { label: 'Mesas Lounge', val: lm, set: setLm, max: 8, step: 1, bigStep: 1, sub: `${lm * 3} personas` },
+                { label: 'General',          val: gen, set: setGen, max: cfg.cap_gen,    step: 1, bigStep: 5 },
+                { label: 'VIP',              val: vip, set: setVip, max: cfg.cap_vip,    step: 1, bigStep: 5 },
+                { label: 'Lounge individual',val: li,  set: setLi,  max: cfg.cap_lounge, step: 1, bigStep: 1 },
+                { label: 'Mesas Lounge',     val: lm,  set: setLm,  max: 8,              step: 1, bigStep: 1, sub: `${lm * 3} personas` },
               ]).map(s => (
                 <div key={s.label}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -230,24 +400,18 @@ export default function Dashboard({ initialConfig, type }: Props) {
                     <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{s.sub ?? `${s.val} / ${s.max}`}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button
-                      onClick={() => s.set(Math.max(0, s.val - s.bigStep))}
-                      style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, fontWeight: 300, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >−</button>
-                    <div style={{ flex: 1, position: 'relative', height: 36, background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)', overflow: 'hidden', cursor: 'pointer' }}
+                    <button onClick={() => s.set(Math.max(0, s.val - s.bigStep))} style={btnBase}>−</button>
+                    <div
+                      style={{ flex: 1, position: 'relative', height: 36, background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)', overflow: 'hidden', cursor: 'pointer' }}
                       onClick={e => {
                         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                        const ratio = (e.clientX - rect.left) / rect.width;
-                        s.set(Math.round(ratio * s.max));
+                        s.set(Math.round((e.clientX - rect.left) / rect.width * s.max));
                       }}
                     >
                       <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${s.max > 0 ? (s.val / s.max) * 100 : 0}%`, background: 'var(--accent)', opacity: 0.25, transition: 'width 0.15s ease' }} />
                       <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{s.val}</span>
                     </div>
-                    <button
-                      onClick={() => s.set(Math.min(s.max, s.val + s.bigStep))}
-                      style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, fontWeight: 300, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >+</button>
+                    <button onClick={() => s.set(Math.min(s.max, s.val + s.bigStep))} style={btnBase}>+</button>
                   </div>
                 </div>
               ))}
@@ -268,7 +432,6 @@ export default function Dashboard({ initialConfig, type }: Props) {
             Gastos {loadingExp && <span>…</span>}
           </h2>
 
-          {/* Add expense form */}
           <div style={{ display: 'grid', gridTemplateColumns: newExpCat === 'Nuevo' ? '1fr 1fr 1fr 1fr auto' : '1fr 2fr 1fr auto', gap: 8, marginBottom: 16 }}>
             <select
               value={newExpCat}
@@ -297,23 +460,18 @@ export default function Dashboard({ initialConfig, type }: Props) {
             />
             <input
               type="number"
-              placeholder="Monto (₡)"
+              placeholder={`Monto (${sym})`}
               value={newExpAmount}
               onChange={e => setNewExpAmount(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addExpense()}
               min={0}
-              step={1000}
+              step={currency === 'USD' ? 1 : 1000}
             />
-            <button
-              onClick={addExpense}
-              disabled={addingExp}
-              style={{ background: 'var(--accent)', color: '#fff', opacity: addingExp ? 0.6 : 1, whiteSpace: 'nowrap' }}
-            >
+            <button onClick={addExpense} disabled={addingExp} style={{ background: 'var(--accent)', color: '#fff', opacity: addingExp ? 0.6 : 1, whiteSpace: 'nowrap' }}>
               + Agregar
             </button>
           </div>
 
-          {/* Expenses table */}
           {expenses.length === 0 ? (
             <p style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>No hay gastos registrados aún.</p>
           ) : (
@@ -321,7 +479,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                 <thead>
                   <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                    {['Categoría', 'Descripción', 'Monto', ''].map(h => (
+                    {['Categoría', 'Descripción', `Monto (${sym})`, ''].map(h => (
                       <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--muted)', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                     ))}
                   </tr>
@@ -333,7 +491,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                         <tr key={e.id} style={{ borderBottom: '0.5px solid var(--border)' }}>
                           <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{i === 0 ? cat : ''}</td>
                           <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{e.label || '—'}</td>
-                          <td style={{ padding: '8px 10px', color: 'var(--text)', fontWeight: 500 }}>₡{e.amount.toLocaleString('es-CR')}</td>
+                          <td style={{ padding: '8px 10px', color: 'var(--text)', fontWeight: 500 }}>{money(e.amount)}</td>
                           <td style={{ padding: '8px 10px' }}>
                             <button onClick={() => deleteExpenseRow(e.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7 }}>×</button>
                           </td>
@@ -341,7 +499,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                       ))}
                       <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
                         <td colSpan={2} style={{ padding: '4px 10px', color: 'var(--muted)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subtotal {cat}</td>
-                        <td style={{ padding: '4px 10px', color: 'var(--muted)', fontSize: 11 }}>₡{rows.reduce((s, r) => s + r.amount, 0).toLocaleString('es-CR')}</td>
+                        <td style={{ padding: '4px 10px', color: 'var(--muted)', fontSize: 11 }}>{money(rows.reduce((s, r) => s + r.amount, 0))}</td>
                         <td />
                       </tr>
                     </>
@@ -350,7 +508,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                 <tfoot>
                   <tr>
                     <td colSpan={2} style={{ padding: '10px 10px', fontFamily: 'var(--font-mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent2)', fontWeight: 600 }}>Costo Neto Total</td>
-                    <td style={{ padding: '10px 10px', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>₡{costNeto.toLocaleString('es-CR')}</td>
+                    <td style={{ padding: '10px 10px', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>{money(costNeto)}</td>
                     <td />
                   </tr>
                 </tfoot>
@@ -384,8 +542,8 @@ export default function Dashboard({ initialConfig, type }: Props) {
                       <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_vip}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_ind}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_mesa}</td>
-                      <td style={{ padding: '8px 10px', color: 'var(--text)' }}>₡{s.ingreso.toLocaleString('es-CR')}</td>
-                      <td style={{ padding: '8px 10px', color: s.pl >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>{fmt(s.pl)}</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{money(s.ingreso)}</td>
+                      <td style={{ padding: '8px 10px', color: s.pl >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>{money(s.pl, true)}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)', fontSize: 10 }}>{new Date(s.created_at).toLocaleDateString('es-CR')}</td>
                       <td style={{ padding: '8px 10px' }}>
                         <button onClick={() => deleteSnap(s.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7 }}>×</button>
@@ -434,7 +592,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                           outline: isOpt ? '1.5px solid var(--accent)' : 'none',
                           outlineOffset: '-1px',
                         }}>
-                          {fmt(p)}
+                          {money(p, true)}
                         </td>
                       );
                     })}
