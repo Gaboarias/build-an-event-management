@@ -37,7 +37,6 @@ const PAYMENT_LABELS: Record<string, string> = {
   sinpe: 'Sinpe', efectivo: 'Efectivo', por_pagar: 'Por Pagar', special: 'Special',
 };
 
-type TicketType = 'individual' | 'group';
 
 export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym }: Props) {
   const [sales, setSales]     = useState<TicketSale[]>([]);
@@ -47,12 +46,11 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
   // Form state
   const [buyerName,      setBuyerName]      = useState('');
-  const [ticketType,     setTicketType]      = useState<TicketType>('individual');
-  const [groupSize,      setGroupSize]       = useState(2);
-  const [zone,           setZone]            = useState('general');
-  const [paymentMethod,  setPaymentMethod]   = useState('sinpe');
-  const [customPrice,    setCustomPrice]     = useState('');
-  const [notes,          setNotes]           = useState('');
+  const [qty,            setQty]            = useState(1);
+  const [zone,           setZone]           = useState('general');
+  const [paymentMethod,  setPaymentMethod]  = useState('sinpe');
+  const [customPrice,    setCustomPrice]    = useState('');
+  const [notes,          setNotes]          = useState('');
 
   const loadSales = useCallback(async () => {
     setLoading(true);
@@ -68,7 +66,6 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   const selectedZone    = ZONES.find(z => z.key === zone)!;
   const selectedPayment = PAYMENT_METHODS.find(p => p.key === paymentMethod)!;
   const isFree          = selectedPayment.free;
-  const qty             = ticketType === 'group' ? groupSize : 1;
 
   const baseUnitPriceCRC = isFree ? 0 : cfg[selectedZone.priceKey];
   const unitPriceDisplay = customPrice !== '' && !isFree
@@ -77,7 +74,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   const totalDisplay = unitPriceDisplay * qty;
 
   function openModal() {
-    setBuyerName(''); setTicketType('individual'); setGroupSize(2);
+    setBuyerName(''); setQty(1);
     setZone('general'); setPaymentMethod('sinpe');
     setCustomPrice(''); setNotes('');
     setShowModal(true);
@@ -98,7 +95,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
           event_id:       eventId,
           buyer_name:     buyerName.trim(),
           zone,
-          ticket_type:    ticketType,
+          ticket_type:    qty > 1 ? 'group' : 'individual',
           group_size:     qty,
           payment_method: paymentMethod,
           unit_price:     unitCRC,
@@ -180,9 +177,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
           <button
             onClick={() => {
               if (buyerName.trim()) {
-                // Quick-confirm with current quick-add state
-                setTicketType('individual');
-                setGroupSize(1);
+                setQty(1);
                 setCustomPrice('');
                 setNotes('');
                 setShowModal(true);
@@ -278,35 +273,50 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                 />
               </div>
 
-              {/* Ticket type */}
+              {/* Quantity */}
               <div>
-                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Tipo de compra</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {(['individual', 'group'] as TicketType[]).map(t => (
+                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
+                  Cantidad de tickets
+                </label>
+                {/* Quick preset buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
+                  {[1, 2, 3, 4, 5].map(n => (
                     <button
-                      key={t}
-                      onClick={() => setTicketType(t)}
+                      key={n}
+                      onClick={() => setQty(n)}
                       style={{
-                        padding: '12px 0', borderRadius: 8, cursor: 'pointer',
-                        background: ticketType === t ? 'var(--accent)' : 'var(--bg3)',
-                        color: ticketType === t ? '#fff' : 'var(--muted)',
-                        border: ticketType === t ? '1px solid var(--accent)' : '0.5px solid var(--border2)',
-                        ...mono, fontSize: 13, fontWeight: 600,
+                        padding: '10px 0', borderRadius: 8, cursor: 'pointer',
+                        background: qty === n ? 'var(--accent)' : 'var(--bg3)',
+                        color: qty === n ? '#fff' : 'var(--muted)',
+                        border: qty === n ? '1px solid var(--accent)' : '0.5px solid var(--border2)',
+                        ...mono, fontSize: 15, fontWeight: 700,
                       }}
-                    >
-                      {t === 'individual' ? '👤 Individual' : '👥 Grupo'}
-                    </button>
+                    >{n}</button>
                   ))}
                 </div>
-                {ticketType === 'group' && (
-                  <div style={{ marginTop: 10 }}>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>Cantidad en el grupo</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <button onClick={() => setGroupSize(s => Math.max(2, s - 1))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, cursor: 'pointer' }}>−</button>
-                      <span style={{ flex: 1, textAlign: 'center', fontSize: 20, fontWeight: 700, ...mono, color: 'var(--text)' }}>{groupSize}</span>
-                      <button onClick={() => setGroupSize(s => Math.min(20, s + 1))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 18, cursor: 'pointer' }}>+</button>
-                    </div>
-                  </div>
+                {/* Stepper for fine-tuning */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => setQty(q => Math.max(1, q - 1))}
+                    style={{ width: 42, height: 42, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 20, cursor: 'pointer', flexShrink: 0 }}
+                  >−</button>
+                  <input
+                    type="number"
+                    value={qty}
+                    min={1}
+                    max={50}
+                    onChange={e => setQty(Math.max(1, Math.min(50, Number(e.target.value) || 1)))}
+                    style={{ flex: 1, textAlign: 'center', fontSize: 22, fontWeight: 800, ...mono, padding: '8px 0' }}
+                  />
+                  <button
+                    onClick={() => setQty(q => Math.min(50, q + 1))}
+                    style={{ width: 42, height: 42, borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', fontSize: 20, cursor: 'pointer', flexShrink: 0 }}
+                  >+</button>
+                </div>
+                {qty > 1 && (
+                  <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 6 }}>
+                    {qty} tickets · se registran como una compra grupal
+                  </p>
                 )}
               </div>
 
