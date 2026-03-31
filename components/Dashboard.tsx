@@ -132,8 +132,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
     } finally { setSaving(false); }
   }
 
-  async function handleEventAction(action: 'paused' | 'cancelled' | 'delete') {
+  async function handleEventAction(action: 'active' | 'paused' | 'cancelled' | 'delete') {
     const labels: Record<string, string> = {
+      active:    '¿Reactivar este evento?',
       paused:    '¿Pausar este evento? Seguirá visible pero marcado como pausado.',
       cancelled: '¿Cancelar este evento? Quedará marcado como cancelado.',
       delete:    '¿Eliminar este evento permanentemente? Esta acción no se puede deshacer.',
@@ -354,10 +355,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </button>
               {cfg.status !== 'active' && (
                 <button
-                  onClick={() => handleEventAction('paused' /* reactivate = back to active via a different path */)}
+                  onClick={() => handleEventAction('active')}
                   style={{ padding: '10px 20px', borderRadius: 8, background: 'rgba(52,211,153,0.1)', border: '0.5px solid var(--green)', color: 'var(--green)', fontFamily: 'var(--font-mono)', fontSize: 13, cursor: 'pointer' }}
                 >
-                  Reactivar evento
+                  ✓ Reactivar evento
                 </button>
               )}
             </div>
