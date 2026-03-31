@@ -158,10 +158,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {[
-            { label: 'Ingreso proyectado', value: `₡${rev.toLocaleString('es-CR')}`, color: 'var(--text)' },
+            { label: 'Gastos', value: `₡${costNeto.toLocaleString('es-CR')}`, color: 'var(--accent2)' },
+            { label: 'Ingresos proyectados', value: `₡${rev.toLocaleString('es-CR')}`, color: 'var(--text)' },
             { label: 'P&L', value: fmt(pl), color: plColor },
             { label: 'Personas', value: pers.toString(), color: 'var(--text)' },
-            { label: '₡ / persona', value: `₡${avg.toLocaleString('es-CR')}`, color: 'var(--accent2)' },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
               <p style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{k.label}</p>
