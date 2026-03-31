@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { EventConfig, EventType, SalesSnapshot, Expense } from '@/lib/db';
+import SalesSheet from './SalesSheet';
 
 interface Props {
   initialConfig: EventConfig;
@@ -334,6 +335,16 @@ export default function Dashboard({ initialConfig, type }: Props) {
             </div>
           ))}
         </div>
+
+        {/* Sales Sheet */}
+        <SalesSheet
+          eventId={eventId}
+          cfg={cfg}
+          money={money}
+          fromCurrent={fromCurrent}
+          toCurrent={toCurrent}
+          sym={sym}
+        />
 
         {/* Progress bar */}
         <div>

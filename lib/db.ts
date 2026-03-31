@@ -147,3 +147,37 @@ export async function updateExpense(id: number, amount: number, label: string | 
 export async function deleteExpense(id: number): Promise<void> {
   await sql`DELETE FROM expenses WHERE id = ${id}`;
 }
+
+export interface TicketSale {
+  id: number;
+  event_id: number;
+  buyer_name: string;
+  zone: string;
+  ticket_type: 'individual' | 'group';
+  group_size: number;
+  payment_method: string;
+  unit_price: number;
+  total_amount: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export async function getSales(eventId: number): Promise<TicketSale[]> {
+  const { rows } = await sql<TicketSale>`
+    SELECT * FROM ticket_sales WHERE event_id = ${eventId} ORDER BY created_at DESC
+  `;
+  return rows;
+}
+
+export async function saveSale(s: Omit<TicketSale, 'id' | 'created_at'>): Promise<TicketSale> {
+  const { rows } = await sql<TicketSale>`
+    INSERT INTO ticket_sales (event_id, buyer_name, zone, ticket_type, group_size, payment_method, unit_price, total_amount, notes)
+    VALUES (${s.event_id}, ${s.buyer_name}, ${s.zone}, ${s.ticket_type}, ${s.group_size}, ${s.payment_method}, ${s.unit_price}, ${s.total_amount}, ${s.notes ?? null})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteSale(id: number): Promise<void> {
+  await sql`DELETE FROM ticket_sales WHERE id = ${id}`;
+}

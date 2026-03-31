@@ -4,7 +4,15 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(npm install:*)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Microsoft/VisualStudio/NodeJs/node.exe\" node_modules/vercel/dist/index.js deploy --prod --yes)",
-      "mcp__a5715786-7d4c-457a-a0da-e74d178463dd__list_tables"
+      "mcp__a5715786-7d4c-457a-a0da-e74d178463dd__list_tables",
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Microsoft/VisualStudio/NodeJs/node.exe\" lib/db-init.js)"
     ]
   }
 }
