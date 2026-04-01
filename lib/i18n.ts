@@ -92,6 +92,7 @@ const translations = {
     col_tables: 'Mesas',
     col_revenue: 'Ingreso',
     col_date: 'Fecha',
+    col_notes: 'Notas',
 
     // P&L Matrix
     matrix_title: 'Matriz P&L — General × Lounge individual',
@@ -294,6 +295,7 @@ const translations = {
     col_tables: 'Tables',
     col_revenue: 'Revenue',
     col_date: 'Date',
+    col_notes: 'Notes',
 
     // P&L Matrix
     matrix_title: 'P&L Matrix — General × Lounge individual',

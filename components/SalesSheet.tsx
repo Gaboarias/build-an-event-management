@@ -216,7 +216,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             <table style={{ width: '100%', borderCollapse: 'collapse', ...mono, fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                  {['#', tr('col_name'), tr('col_zone'), tr('col_type'), tr('col_qty'), tr('col_method'), tr('col_sale_amount'), tr('col_date'), ''].map(h => (
+                  {['#', tr('col_name'), tr('col_zone'), tr('col_type'), tr('col_qty'), tr('col_method'), tr('col_sale_amount'), tr('col_notes'), tr('col_date'), ''].map(h => (
                     <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--muted)', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                   ))}
                 </tr>
@@ -237,6 +237,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                     <td style={{ padding: '8px 10px', color: s.total_amount === 0 ? 'var(--muted)' : 'var(--text)', fontWeight: 500 }}>
                       {s.total_amount === 0 ? '—' : money(s.total_amount)}
                     </td>
+                    <td style={{ padding: '8px 10px', color: 'var(--muted)', fontSize: 11, fontStyle: s.notes ? 'normal' : 'italic', maxWidth: 160, whiteSpace: 'normal' }}>{s.notes || '—'}</td>
                     <td style={{ padding: '8px 10px', color: 'var(--muted)', fontSize: 10 }}>{new Date(s.created_at).toLocaleDateString('es-CR')}</td>
                     <td style={{ padding: '8px 10px' }}>
                       <button
@@ -251,7 +252,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                 <tr style={{ borderTop: '0.5px solid var(--border2)' }}>
                   <td colSpan={6} style={{ padding: '10px 10px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--green)', fontWeight: 600 }}>{tr('total_collected')}</td>
                   <td style={{ padding: '10px 10px', fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{money(totalCollected)}</td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               </tfoot>
             </table>
