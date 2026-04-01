@@ -199,7 +199,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             <table style={{ width: '100%', borderCollapse: 'collapse', ...mono, fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                  {['#', tr('col_name'), tr('col_zone'), tr('col_type'), tr('col_qty'), tr('col_method'), tr('col_amount'), tr('col_date'), ''].map(h => (
+                  {['#', tr('col_name'), tr('col_zone'), tr('col_type'), tr('col_qty'), tr('col_method'), tr('col_sale_amount'), tr('col_date'), ''].map(h => (
                     <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--muted)', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                   ))}
                 </tr>

@@ -217,7 +217,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
   })).filter(g => g.rows.length > 0);
 
   // Also group any custom categories not in the standard list
-  const customCats = [...new Set(expenses.filter(e => !EXPENSE_CATEGORIES.includes(e.category as typeof EXPENSE_CATEGORIES[number])).map(e => e.category))];
+  const customCats = Array.from(new Set(expenses.filter(e => !EXPENSE_CATEGORIES.includes(e.category as typeof EXPENSE_CATEGORIES[number])).map(e => e.category)));
   const allGroups = [
     ...expByCategory,
     ...customCats.map(cat => ({ cat, rows: expenses.filter(e => e.category === cat) })),
