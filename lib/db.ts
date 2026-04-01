@@ -194,3 +194,32 @@ export async function saveSale(s: Omit<TicketSale, 'id' | 'created_at'>): Promis
 export async function deleteSale(id: number): Promise<void> {
   await sql`DELETE FROM ticket_sales WHERE id = ${id}`;
 }
+
+export interface EventZone {
+  id: number;
+  event_id: number;
+  name: string;
+  capacity: number;
+  price: number;
+  created_at: string;
+}
+
+export async function getZones(eventId: number): Promise<EventZone[]> {
+  const { rows } = await sql<EventZone>`
+    SELECT * FROM event_zones WHERE event_id = ${eventId} ORDER BY created_at
+  `;
+  return rows;
+}
+
+export async function saveZone(z: Omit<EventZone, 'id' | 'created_at'>): Promise<EventZone> {
+  const { rows } = await sql<EventZone>`
+    INSERT INTO event_zones (event_id, name, capacity, price)
+    VALUES (${z.event_id}, ${z.name}, ${z.capacity}, ${z.price})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteZone(id: number): Promise<void> {
+  await sql`DELETE FROM event_zones WHERE id = ${id}`;
+}

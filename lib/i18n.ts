@@ -163,6 +163,15 @@ const translations = {
     cat_sillas: 'Sillas',
     cat_estadia: 'Estadía',
 
+    // Zones management
+    zones_title: 'Zonas adicionales',
+    add_zone: '+ Agregar zona',
+    zone_name_ph: 'Nombre de la zona…',
+    zone_capacity: 'Aforo',
+    zone_price: 'Precio',
+    no_custom_zones: 'Sin zonas adicionales.',
+    confirm_delete_zone: '¿Eliminar esta zona?',
+
     // HomePage
     home_subtitle: 'Wrestling Events Manager',
     section_events: 'Eventos',
@@ -341,6 +350,15 @@ const translations = {
     cat_grabacion: 'Recording',
     cat_sillas: 'Chairs',
     cat_estadia: 'Lodging',
+
+    // Zones management
+    zones_title: 'Additional zones',
+    add_zone: '+ Add zone',
+    zone_name_ph: 'Zone name…',
+    zone_capacity: 'Capacity',
+    zone_price: 'Price',
+    no_custom_zones: 'No additional zones yet.',
+    confirm_delete_zone: 'Delete this zone?',
 
     // HomePage
     home_subtitle: 'Wrestling Events Manager',

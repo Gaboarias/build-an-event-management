@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { EventConfig, TicketSale } from '@/lib/db';
+import type { EventConfig, TicketSale, EventZone } from '@/lib/db';
 import { type Lang, makeTr } from '@/lib/i18n';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   lang: Lang;
   toCurrent: (crc: number) => number;
   sym: string;
+  customZones: EventZone[];
 }
 
 const ZONES = [
@@ -36,8 +37,13 @@ const PAYMENT_COLORS: Record<string, string> = {
 };
 
 
-export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang }: Props) {
+export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang, customZones }: Props) {
   const tr = makeTr(lang);
+
+  const allZones = [
+    ...ZONES.map(z => ({ value: z.key, label: tr(z.zoneKey), price: cfg[z.priceKey] as number, isCustom: false })),
+    ...customZones.map(z => ({ value: `cz_${z.id}`, label: z.name, price: z.price, isCustom: true })),
+  ];
   const [sales, setSales]     = useState<TicketSale[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -62,11 +68,11 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   useEffect(() => { loadSales(); }, [loadSales]);
 
   // Derived pricing
-  const selectedZone    = ZONES.find(z => z.key === zone)!;
-  const selectedPayment = PAYMENT_KEYS.find(p => p.key === paymentMethod)!;
-  const isFree          = selectedPayment.free;
+  const selectedZoneData = allZones.find(z => z.value === zone) ?? allZones[0];
+  const selectedPayment  = PAYMENT_KEYS.find(p => p.key === paymentMethod)!;
+  const isFree           = selectedPayment.free;
 
-  const baseUnitPriceCRC = isFree ? 0 : cfg[selectedZone.priceKey];
+  const baseUnitPriceCRC = isFree ? 0 : selectedZoneData.price;
   const unitPriceDisplay = customPrice !== '' && !isFree
     ? Number(customPrice)
     : Math.round(toCurrent(baseUnitPriceCRC));
@@ -93,7 +99,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
         body: JSON.stringify({
           event_id:       eventId,
           buyer_name:     buyerName.trim(),
-          zone,
+          zone: zone.startsWith('cz_') ? (customZones.find(z => `cz_${z.id}` === zone)?.name ?? zone) : zone,
           ticket_type:    qty > 1 ? 'group' : 'individual',
           group_size:     qty,
           payment_method: paymentMethod,
@@ -165,7 +171,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             onChange={e => setZone(e.target.value)}
             style={{ background: 'var(--bg)', border: '0.5px solid var(--border2)', color: 'var(--text)', ...mono, fontSize: 13, borderRadius: 6, padding: '8px 12px' }}
           >
-            {ZONES.map(z => <option key={z.key} value={z.key}>{tr(z.zoneKey)}</option>)}
+            {allZones.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
           </select>
           <select
             value={paymentMethod}
@@ -324,21 +330,21 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
               <div>
                 <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>{tr('zone_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {ZONES.map(z => (
+                  {allZones.map(z => (
                     <button
-                      key={z.key}
-                      onClick={() => setZone(z.key)}
+                      key={z.value}
+                      onClick={() => setZone(z.value)}
                       style={{
                         padding: '10px 8px', borderRadius: 8, cursor: 'pointer',
-                        background: zone === z.key ? 'rgba(124,109,250,0.15)' : 'var(--bg3)',
-                        color: zone === z.key ? 'var(--accent2)' : 'var(--muted)',
-                        border: zone === z.key ? '1px solid var(--accent2)' : '0.5px solid var(--border2)',
+                        background: zone === z.value ? 'rgba(124,109,250,0.15)' : 'var(--bg3)',
+                        color: zone === z.value ? 'var(--accent2)' : 'var(--muted)',
+                        border: zone === z.value ? '1px solid var(--accent2)' : '0.5px solid var(--border2)',
                         ...mono, fontSize: 12,
                       }}
                     >
-                      <div style={{ fontWeight: 600 }}>{tr(z.zoneKey)}</div>
-                      <div style={{ fontSize: 10, marginTop: 2, color: zone === z.key ? 'var(--accent2)' : 'var(--muted)', opacity: 0.8 }}>
-                        {money(cfg[z.priceKey])}
+                      <div style={{ fontWeight: 600 }}>{z.label}</div>
+                      <div style={{ fontSize: 10, marginTop: 2, color: zone === z.value ? 'var(--accent2)' : 'var(--muted)', opacity: 0.8 }}>
+                        {money(z.price)}
                       </div>
                     </button>
                   ))}
@@ -395,7 +401,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
               <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '14px 16px', border: '0.5px solid var(--border2)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('col_zone2')}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{tr(selectedZone.zoneKey)}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{selectedZoneData.label}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('col_qty2')}</span>

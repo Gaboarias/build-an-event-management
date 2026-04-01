@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { EventConfig, EventType, SalesSnapshot, Expense } from '@/lib/db';
+import type { EventConfig, EventType, SalesSnapshot, Expense, EventZone } from '@/lib/db';
 import SalesSheet from './SalesSheet';
 import { type Lang, makeTr, getLang, setLang } from '@/lib/i18n';
 
@@ -49,6 +49,12 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [newExpLabel, setNewExpLabel] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
   const [addingExp, setAddingExp]     = useState(false);
+
+  const [customZones, setCustomZones]     = useState<EventZone[]>([]);
+  const [newZoneName, setNewZoneName]     = useState('');
+  const [newZoneCap,  setNewZoneCap]      = useState('');
+  const [newZonePrice, setNewZonePrice]   = useState('');
+  const [addingZone,  setAddingZone]      = useState(false);
 
   // Settings
   const [showSettings, setShowSettings] = useState(false);
@@ -136,7 +142,12 @@ export default function Dashboard({ initialConfig, type }: Props) {
     finally { setLoadingExp(false); }
   }, [eventId]);
 
-  useEffect(() => { loadSnapshots(); loadExpenses(); }, [loadSnapshots, loadExpenses]);
+  const loadZones = useCallback(async () => {
+    const r = await fetch(`/api/zones?eventId=${eventId}`);
+    setCustomZones(await r.json());
+  }, [eventId]);
+
+  useEffect(() => { loadSnapshots(); loadExpenses(); loadZones(); }, [loadSnapshots, loadExpenses, loadZones]);
 
   async function saveConfig() {
     setSaving(true);
@@ -207,6 +218,25 @@ export default function Dashboard({ initialConfig, type }: Props) {
   async function deleteExpenseRow(id: number) {
     await fetch('/api/expenses', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     loadExpenses();
+  }
+
+  async function addZone() {
+    if (!newZoneName.trim()) return;
+    setAddingZone(true);
+    try {
+      const priceRaw = Math.round(fromCurrent(Number(newZonePrice) || 0));
+      const r = await fetch('/api/zones', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId, name: newZoneName.trim(), capacity: Number(newZoneCap) || 0, price: priceRaw }) });
+      if (!r.ok) return;
+      setNewZoneName(''); setNewZoneCap(''); setNewZonePrice('');
+      loadZones();
+    } finally { setAddingZone(false); }
+  }
+
+  async function deleteZoneRow(id: number) {
+    if (!confirm(tr('confirm_delete_zone'))) return;
+    await fetch('/api/zones', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    loadZones();
   }
 
   const GENE_STEPS   = [40, 50, 60, 70, 80, 90, 100];
@@ -329,6 +359,33 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </div>
             </div>
 
+            {/* Custom Zones */}
+            <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
+              <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('zones_title')}</p>
+              {customZones.length === 0 ? (
+                <p style={{ fontSize: 12, color: 'var(--muted)', ...mono, marginBottom: 12 }}>{tr('no_custom_zones')}</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                  {customZones.map(z => (
+                    <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)' }}>
+                      <span style={{ flex: 1, ...mono, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{z.name}</span>
+                      <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_capacity')}: {z.capacity}</span>
+                      <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_price')}: {money(z.price)}</span>
+                      <button onClick={() => deleteZoneRow(z.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 8 }}>
+                <input type="text" placeholder={tr('zone_name_ph')} value={newZoneName} onChange={e => setNewZoneName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addZone()} />
+                <input type="number" placeholder={tr('zone_capacity')} value={newZoneCap} onChange={e => setNewZoneCap(e.target.value)} min={0} step={1} />
+                <input type="number" placeholder={`${tr('zone_price')} (${sym})`} value={newZonePrice} onChange={e => setNewZonePrice(e.target.value)} min={0} step={currency === 'CRC' ? 500 : 1} />
+                <button onClick={addZone} disabled={addingZone} style={{ background: 'var(--accent)', color: '#fff', opacity: addingZone ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                  {tr('add_zone')}
+                </button>
+              </div>
+            </div>
+
             {/* Save + Reactivate */}
             <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={saveConfig} disabled={saving}
@@ -391,7 +448,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
 
         {/* Sales Sheet */}
-        <SalesSheet eventId={eventId} cfg={cfg} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} />
+        <SalesSheet eventId={eventId} cfg={cfg} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} customZones={customZones} />
 
         {/* Progress bar */}
         <div>
