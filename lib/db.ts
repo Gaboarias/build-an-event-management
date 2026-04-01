@@ -9,6 +9,7 @@ export interface EventConfig {
   event_name: string;
   type: EventType;
   status: EventStatus;
+  frozen_zones: string;
   price_gen: number;
   price_vip: number;
   price_lounge_ind: number;
@@ -89,6 +90,7 @@ export async function updateConfig(eventId: number, data: Partial<EventConfig>):
       cap_lounge       = COALESCE(${data.cap_lounge       ?? null}::integer, cap_lounge),
       event_name       = COALESCE(${data.event_name       ?? null}, event_name),
       status           = COALESCE(${data.status           ?? null}, status),
+      frozen_zones     = COALESCE(${data.frozen_zones     ?? null}, frozen_zones),
       updated_at       = NOW()
     WHERE id = ${eventId}
     RETURNING *
@@ -201,6 +203,7 @@ export interface EventZone {
   name: string;
   capacity: number;
   price: number;
+  frozen: boolean;
   created_at: string;
 }
 
@@ -211,11 +214,23 @@ export async function getZones(eventId: number): Promise<EventZone[]> {
   return rows;
 }
 
-export async function saveZone(z: Omit<EventZone, 'id' | 'created_at'>): Promise<EventZone> {
+export async function saveZone(z: Omit<EventZone, 'id' | 'created_at' | 'frozen'>): Promise<EventZone> {
   const { rows } = await sql<EventZone>`
     INSERT INTO event_zones (event_id, name, capacity, price)
     VALUES (${z.event_id}, ${z.name}, ${z.capacity}, ${z.price})
     RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function updateZone(id: number, data: { frozen?: boolean; name?: string; capacity?: number; price?: number }): Promise<EventZone> {
+  const { rows } = await sql<EventZone>`
+    UPDATE event_zones SET
+      frozen   = COALESCE(${data.frozen   ?? null}::boolean, frozen),
+      name     = COALESCE(${data.name     ?? null}, name),
+      capacity = COALESCE(${data.capacity ?? null}::integer, capacity),
+      price    = COALESCE(${data.price    ?? null}::integer, price)
+    WHERE id = ${id} RETURNING *
   `;
   return rows[0];
 }

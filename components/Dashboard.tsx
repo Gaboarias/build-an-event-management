@@ -253,6 +253,28 @@ export default function Dashboard({ initialConfig, type }: Props) {
     ...customCats.map(cat => ({ cat, rows: expenses.filter(e => e.category === cat) })),
   ];
 
+  const frozenDefaultZones: string[] = (() => {
+    try { return JSON.parse(cfg.frozen_zones || '[]'); } catch { return []; }
+  })();
+
+  async function toggleDefaultZone(key: string) {
+    const current = frozenDefaultZones;
+    const next = current.includes(key)
+      ? current.filter(k => k !== key)
+      : [...current, key];
+    const r = await fetch('/api/config', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, frozen_zones: JSON.stringify(next) }) });
+    if (!r.ok) return;
+    const updated = await r.json();
+    setCfg(updated); setDraft(updated);
+  }
+
+  async function toggleCustomZone(id: number, currentFrozen: boolean) {
+    await fetch('/api/zones', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, frozen: !currentFrozen }) });
+    loadZones();
+  }
+
   const btnBase: React.CSSProperties = {
     width: 36, height: 36, borderRadius: 8,
     background: 'var(--bg3)', border: '0.5px solid var(--border2)',
@@ -359,18 +381,51 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </div>
             </div>
 
-            {/* Custom Zones */}
+            {/* Zones */}
             <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
+              <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('default_zones_title')}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                {([
+                  { key: 'general',     label: tr('lbl_gen'),        cap: draft.cap_gen },
+                  { key: 'vip',         label: tr('lbl_vip'),        cap: draft.cap_vip },
+                  { key: 'lounge_ind',  label: tr('lbl_lounge_ind'), cap: draft.cap_lounge },
+                  { key: 'lounge_mesa', label: tr('lbl_lounge_mesa'), cap: draft.cap_lounge },
+                ] as const).map(z => {
+                  const isFrozen = frozenDefaultZones.includes(z.key);
+                  return (
+                    <div key={z.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: isFrozen ? 'rgba(248,113,113,0.07)' : 'var(--bg3)', borderRadius: 8, border: `0.5px solid ${isFrozen ? 'rgba(248,113,113,0.3)' : 'var(--border2)'}`, opacity: isFrozen ? 0.75 : 1 }}>
+                      <span style={{ flex: 1, ...mono, fontSize: 13, color: isFrozen ? 'var(--muted)' : 'var(--text)', fontWeight: 600, textDecoration: isFrozen ? 'line-through' : 'none' }}>{z.label}</span>
+                      {isFrozen && <span style={{ ...mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--red)', background: 'rgba(248,113,113,0.12)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 6px' }}>{tr('zone_frozen')}</span>}
+                      <button onClick={() => toggleDefaultZone(z.key)}
+                        style={{ padding: '4px 12px', borderRadius: 6, ...mono, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                          background: isFrozen ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.08)',
+                          border: `0.5px solid ${isFrozen ? 'var(--green)' : 'rgba(248,113,113,0.4)'}`,
+                          color: isFrozen ? 'var(--green)' : 'var(--red)' }}>
+                        {isFrozen ? tr('unfreeze_zone') : tr('freeze_zone')}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
               <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('zones_title')}</p>
               {customZones.length === 0 ? (
                 <p style={{ fontSize: 12, color: 'var(--muted)', ...mono, marginBottom: 12 }}>{tr('no_custom_zones')}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                   {customZones.map(z => (
-                    <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)' }}>
-                      <span style={{ flex: 1, ...mono, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{z.name}</span>
+                    <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: z.frozen ? 'rgba(248,113,113,0.07)' : 'var(--bg3)', borderRadius: 8, border: `0.5px solid ${z.frozen ? 'rgba(248,113,113,0.3)' : 'var(--border2)'}`, opacity: z.frozen ? 0.75 : 1 }}>
+                      <span style={{ flex: 1, ...mono, fontSize: 13, color: z.frozen ? 'var(--muted)' : 'var(--text)', fontWeight: 600, textDecoration: z.frozen ? 'line-through' : 'none' }}>{z.name}</span>
                       <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_capacity')}: {z.capacity}</span>
                       <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_price')}: {money(z.price)}</span>
+                      {z.frozen && <span style={{ ...mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--red)', background: 'rgba(248,113,113,0.12)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 6px' }}>{tr('zone_frozen')}</span>}
+                      <button onClick={() => toggleCustomZone(z.id, z.frozen)}
+                        style={{ padding: '4px 12px', borderRadius: 6, ...mono, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                          background: z.frozen ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.08)',
+                          border: `0.5px solid ${z.frozen ? 'var(--green)' : 'rgba(248,113,113,0.4)'}`,
+                          color: z.frozen ? 'var(--green)' : 'var(--red)' }}>
+                        {z.frozen ? tr('unfreeze_zone') : tr('freeze_zone')}
+                      </button>
                       <button onClick={() => deleteZoneRow(z.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
                     </div>
                   ))}

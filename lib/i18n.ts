@@ -171,6 +171,10 @@ const translations = {
     zone_price: 'Precio',
     no_custom_zones: 'Sin zonas adicionales.',
     confirm_delete_zone: '¿Eliminar esta zona?',
+    freeze_zone: '⏸ Congelar',
+    unfreeze_zone: '▶ Activar',
+    zone_frozen: 'CONGELADA',
+    default_zones_title: 'Zonas predeterminadas',
 
     // HomePage
     home_subtitle: 'Wrestling Events Manager',
@@ -359,6 +363,10 @@ const translations = {
     zone_price: 'Price',
     no_custom_zones: 'No additional zones yet.',
     confirm_delete_zone: 'Delete this zone?',
+    freeze_zone: '⏸ Freeze',
+    unfreeze_zone: '▶ Unfreeze',
+    zone_frozen: 'FROZEN',
+    default_zones_title: 'Default zones',
 
     // HomePage
     home_subtitle: 'Wrestling Events Manager',

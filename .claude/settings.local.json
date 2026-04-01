@@ -12,7 +12,22 @@
       "Bash(git pull:*)",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Microsoft/VisualStudio/NodeJs/node.exe\" lib/db-init.js)"
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Microsoft/VisualStudio/NodeJs/node.exe\" lib/db-init.js)",
+      "Bash(node node_modules/vercel/dist/index.js deploy --prod --yes)",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__deploy_to_vercel",
+      "Bash(vercel deploy:*)",
+      "Bash(npx vercel:*)",
+      "Bash(node_modules/.bin/vercel deploy:*)",
+      "Bash(node node_modules/vercel/dist/index.js logs --prod)",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__get_runtime_logs",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__get_deployment_build_logs",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__list_deployments",
+      "Bash(node lib/db-init.js)",
+      "Bash(ls \"C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble\\\\.vercel\"\" 2>/dev/null || echo \"no .vercel dir \")",
+      "Bash(ls /c/Users/GabrielAriasMesen/AppData/Roaming/npm/vercel*)",
+      "Read(//c/Users/GabrielAriasMesen/**)",
+      "Bash(/c/Users/GabrielAriasMesen/AppData/Roaming/npm-global/vercel.cmd deploy:*)",
+      "Bash(/c/Users/GabrielAriasMesen/AppData/Local/npm-cache/_npx/69f9afb961c37556/node_modules/.bin/vercel.cmd deploy:*)"
     ]
   }
 }

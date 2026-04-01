@@ -40,9 +40,17 @@ const PAYMENT_COLORS: Record<string, string> = {
 export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang, customZones }: Props) {
   const tr = makeTr(lang);
 
+  const frozenDefaultKeys: string[] = (() => {
+    try { return JSON.parse((cfg as any).frozen_zones || '[]'); } catch { return []; }
+  })();
+
   const allZones = [
-    ...ZONES.map(z => ({ value: z.key, label: tr(z.zoneKey), price: cfg[z.priceKey] as number, isCustom: false })),
-    ...customZones.map(z => ({ value: `cz_${z.id}`, label: z.name, price: z.price, isCustom: true })),
+    ...ZONES
+      .filter(z => !frozenDefaultKeys.includes(z.key))
+      .map(z => ({ value: z.key, label: tr(z.zoneKey), price: cfg[z.priceKey] as number, isCustom: false })),
+    ...customZones
+      .filter(z => !z.frozen)
+      .map(z => ({ value: `cz_${z.id}`, label: z.name, price: z.price, isCustom: true })),
   ];
   const [sales, setSales]     = useState<TicketSale[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +88,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
   function openModal() {
     setBuyerName(''); setQty(1);
-    setZone('general'); setPaymentMethod('sinpe');
+    setZone(allZones[0]?.value ?? 'general'); setPaymentMethod('sinpe');
     setCustomPrice(''); setNotes('');
     setShowModal(true);
   }
