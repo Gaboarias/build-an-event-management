@@ -62,8 +62,8 @@ function CreateForm({ type, onCancel, onCreated, lang }: { type: EventType; onCa
 function ItemCard({ item, lang }: { item: EventListItem; lang: Lang }) {
   const tr = makeTr(lang);
   const href = item.type === 'seminar' ? `/seminars/${item.id}` : `/events/${item.id}`;
-  const badgeColor = item.type === 'seminar' ? 'rgba(251,191,36,0.15)' : 'rgba(124,109,250,0.15)';
-  const badgeText  = item.type === 'seminar' ? '#fbbf24' : 'var(--accent2)';
+  const badgeColor = item.type === 'seminar' ? 'rgba(31,117,254,0.15)' : 'rgba(31,117,254,0.12)';
+  const badgeText  = item.type === 'seminar' ? '#1F75FE' : 'var(--accent2)';
   const badgeLabel = item.type === 'seminar' ? tr('type_badge_seminar').toUpperCase() : tr('type_badge_event').toUpperCase();
   const locale     = lang === 'en' ? 'en-US' : 'es-CR';
   const dateStr    = item.event_date
