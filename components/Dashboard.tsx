@@ -836,45 +836,8 @@ export default function Dashboard({ initialConfig, type }: Props) {
           )}
         </section>
 
-        {/* P&L Matrix / Seminar Projection */}
-        {type === 'seminar' ? (() => {
-          const fillSteps = [0.10, 0.25, 0.50, 0.60, 0.75, 0.90, 1.00];
-          return (
-            <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
-              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('matrix_seminar_title')}</h2>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 12, width: '100%' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                      {[tr('seminar_fill_rate'), tr('lbl_attendees'), tr('col_revenue'), tr('kpi_pl')].map(h => (
-                        <th key={h} style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fillSteps.map(pct2 => {
-                      const att = Math.round(cfg.cap_gen * pct2);
-                      const r2  = att * cfg.price_gen;
-                      const p   = r2 - costNeto;
-                      const isCurrent = att === gen;
-                      let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';
-                      if (p >= 0)            { bg = 'rgba(52,211,153,0.12)';  clr = '#34d399'; }
-                      else if (p >= -150000) { bg = 'rgba(251,191,36,0.12)';  clr = '#fbbf24'; }
-                      return (
-                        <tr key={pct2} style={{ borderBottom: '0.5px solid var(--border)', background: isCurrent ? 'rgba(124,109,250,0.08)' : 'transparent', outline: isCurrent ? '1.5px solid var(--accent)' : 'none', outlineOffset: '-1px' }}>
-                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', background: 'var(--bg3)', color: isCurrent ? 'var(--accent2)' : 'var(--muted)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{Math.round(pct2 * 100)}%</td>
-                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', color: isCurrent ? 'var(--accent2)' : 'var(--text)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{att}</td>
-                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', color: isCurrent ? 'var(--accent2)' : 'var(--text)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{money(r2)}</td>
-                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', background: isCurrent ? 'rgba(124,109,250,0.2)' : bg, color: isCurrent ? 'var(--accent2)' : clr, textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{money(p, true)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          );
-        })() : (() => {
+        {/* P&L Matrix — events only */}
+        {type !== 'seminar' && (() => {
           const isVIPFrozen      = frozenDefaultZones.includes('vip');
           const isGenFrozen      = frozenDefaultZones.includes('general');
           const isLoungeIndFrozen = frozenDefaultZones.includes('lounge_ind');
@@ -943,7 +906,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
           );
         })()}
 
-      </div>
+        </div>
     </div>
   );
 }
