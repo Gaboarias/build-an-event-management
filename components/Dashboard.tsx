@@ -33,9 +33,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
 
-  const [gen, setGen] = useState(initialConfig.cap_gen);
-  const [vip, setVip] = useState(initialConfig.cap_vip);
-  const [li, setLi]   = useState(initialConfig.cap_lounge);
+  const [gen, setGen] = useState(0);
+  const [vip, setVip] = useState(0);
+  const [li, setLi]   = useState(0);
   const [lm, setLm]   = useState(0);
 
   const [snapshots, setSnapshots]   = useState<SalesSnapshot[]>([]);
@@ -52,6 +52,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [editExpId,    setEditExpId]    = useState<number | null>(null);
   const [editExpLabel, setEditExpLabel] = useState('');
   const [editExpAmount, setEditExpAmount] = useState('');
+
+  // Info cards (name / venue / date)
+  const [editInfoField, setEditInfoField] = useState<'event_name' | 'venue' | 'event_date' | null>(null);
+  const [editInfoVal,   setEditInfoVal]   = useState('');
 
   const [customZones, setCustomZones]     = useState<EventZone[]>([]);
   const [newZoneName, setNewZoneName]     = useState('');
@@ -198,6 +202,17 @@ export default function Dashboard({ initialConfig, type }: Props) {
         setCfg(updated); setDraft(updated);
       }
     } finally { setActionLoading(false); }
+  }
+
+  async function saveInfoField() {
+    if (!editInfoField) return;
+    const val = editInfoVal.trim() || null;
+    const r = await fetch('/api/config', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, [editInfoField]: val }) });
+    if (!r.ok) return;
+    const updated = await r.json();
+    setCfg(updated); setDraft(updated);
+    setEditInfoField(null);
   }
 
   async function saveSnap() {
@@ -513,6 +528,38 @@ export default function Dashboard({ initialConfig, type }: Props) {
             </div>
           </section>
         )}
+
+        {/* Event Info Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          {([
+            { field: 'event_name'  as const, label: tr('info_event_name'), value: cfg.event_name,  display: cfg.event_name,  type: 'text',   ph: cfg.event_name },
+            { field: 'venue'       as const, label: tr('info_venue'),      value: cfg.venue ?? '',  display: cfg.venue,       type: 'text',   ph: tr('info_venue_ph') },
+            { field: 'event_date'  as const, label: tr('info_date'),       value: cfg.event_date ?? '', display: cfg.event_date ? new Date(cfg.event_date + 'T00:00:00').toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' }) : null, type: 'date', ph: tr('info_date_ph') },
+          ]).map(card => (
+            <div key={card.field} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+              <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{card.label}</p>
+              {editInfoField === card.field ? (
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input autoFocus type={card.type} value={editInfoVal}
+                    onChange={e => setEditInfoVal(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && saveInfoField()}
+                    placeholder={card.ph}
+                    style={{ flex: 1, fontSize: 13, fontWeight: 600, padding: '4px 8px' }} />
+                  <button onClick={saveInfoField} style={{ background: 'var(--green)', color: '#fff', padding: '3px 10px', fontSize: 11, border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 600 }}>✓</button>
+                  <button onClick={() => setEditInfoField(null)} style={{ background: 'transparent', color: 'var(--muted)', padding: '3px 8px', fontSize: 11, border: '0.5px solid var(--border2)', cursor: 'pointer', borderRadius: 4 }}>✕</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: card.display ? 'var(--text)' : 'var(--muted)', ...mono, fontStyle: card.display ? 'normal' : 'italic' }}>
+                    {card.display || (card.field === 'venue' ? tr('info_no_venue') : tr('info_no_date'))}
+                  </p>
+                  <button onClick={() => { setEditInfoField(card.field); setEditInfoVal(card.value); }}
+                    style={{ background: 'transparent', color: 'var(--muted)', padding: '2px 7px', fontSize: 11, border: '0.5px solid var(--border2)', cursor: 'pointer', borderRadius: 4, flexShrink: 0 }}>✎</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>

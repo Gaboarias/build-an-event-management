@@ -11,6 +11,8 @@ export interface EventConfig {
   type: EventType;
   status: EventStatus;
   frozen_zones: string;
+  venue: string | null;
+  event_date: string | null;
   price_gen: number;
   price_vip: number;
   price_lounge_ind: number;
@@ -93,6 +95,8 @@ export async function updateConfig(eventId: number, data: Partial<EventConfig>):
       event_name       = COALESCE(${data.event_name       ?? null}, event_name),
       status           = COALESCE(${data.status           ?? null}, status),
       frozen_zones     = COALESCE(${data.frozen_zones     ?? null}, frozen_zones),
+      venue            = COALESCE(${data.venue            ?? null}, venue),
+      event_date       = COALESCE(${data.event_date       ?? null}, event_date),
       updated_at       = NOW()
     WHERE id = ${eventId}
     RETURNING *

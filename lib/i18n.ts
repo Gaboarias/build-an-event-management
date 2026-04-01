@@ -177,6 +177,15 @@ const translations = {
     default_zones_title: 'Zonas predeterminadas',
 
     // HomePage
+    // Event info cards
+    info_event_name: 'Nombre del evento',
+    info_venue: 'Venue',
+    info_date: 'Fecha del evento',
+    info_venue_ph: 'Nombre del venue…',
+    info_date_ph: 'Seleccionar fecha…',
+    info_no_venue: 'Sin venue',
+    info_no_date: 'Sin fecha',
+
     home_subtitle: 'Wrestling Events Manager',
     section_events: 'Eventos',
     section_seminars: 'Seminarios',
@@ -369,6 +378,15 @@ const translations = {
     default_zones_title: 'Default zones',
 
     // HomePage
+    // Event info cards
+    info_event_name: 'Event name',
+    info_venue: 'Venue',
+    info_date: 'Event date',
+    info_venue_ph: 'Venue name…',
+    info_date_ph: 'Select date…',
+    info_no_venue: 'No venue',
+    info_no_date: 'No date',
+
     home_subtitle: 'Wrestling Events Manager',
     section_events: 'Events',
     section_seminars: 'Seminars',
