@@ -809,7 +809,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
               <table style={{ width: '100%', borderCollapse: 'collapse', ...mono, fontSize: 12 }}>
                 <thead>
                   <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                    {[tr('col_scenario'), tr('lbl_gen'), tr('lbl_vip'), tr('col_lounge_ind'), tr('col_tables'), tr('col_revenue'), tr('kpi_pl'), tr('col_date'), ''].map(h => (
+                    {(type === 'seminar'
+                      ? [tr('col_scenario'), tr('lbl_attendees'), tr('lbl_external_wrestlers'), tr('col_revenue'), tr('kpi_pl'), tr('col_date'), '']
+                      : [tr('col_scenario'), tr('lbl_gen'), tr('lbl_vip'), tr('col_lounge_ind'), tr('col_tables'), tr('col_revenue'), tr('kpi_pl'), tr('col_date'), '']
+                    ).map(h => (
                       <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--muted)', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                     ))}
                   </tr>
@@ -820,8 +823,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
                       <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{s.label}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_gen}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_vip}</td>
-                      <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_ind}</td>
-                      <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_mesa}</td>
+                      {type !== 'seminar' && <>
+                        <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_ind}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{s.qty_lounge_mesa}</td>
+                      </>}
                       <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{money(s.ingreso)}</td>
                       <td style={{ padding: '8px 10px', color: s.pl >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>{money(s.pl, true)}</td>
                       <td style={{ padding: '8px 10px', color: 'var(--muted)', fontSize: 10 }}>{new Date(s.created_at).toLocaleDateString(locale)}</td>
