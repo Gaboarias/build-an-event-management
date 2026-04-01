@@ -28,6 +28,8 @@ export interface EventListItem {
   id: number;
   event_name: string;
   type: EventType;
+  venue: string | null;
+  event_date: string | null;
   updated_at: string;
 }
 
@@ -47,7 +49,7 @@ export interface SalesSnapshot {
 export async function getAllEvents(): Promise<EventListItem[]> {
   noStore();
   const { rows } = await sql<EventListItem>`
-    SELECT id, event_name, type, updated_at FROM event_config ORDER BY id
+    SELECT id, event_name, type, venue, event_date, updated_at FROM event_config ORDER BY id
   `;
   return rows;
 }

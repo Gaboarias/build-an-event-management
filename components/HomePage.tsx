@@ -64,21 +64,39 @@ function ItemCard({ item, lang }: { item: EventListItem; lang: Lang }) {
   const badgeColor = item.type === 'seminar' ? 'rgba(251,191,36,0.15)' : 'rgba(124,109,250,0.15)';
   const badgeText  = item.type === 'seminar' ? '#fbbf24' : 'var(--accent2)';
   const badgeLabel = item.type === 'seminar' ? tr('type_badge_seminar').toUpperCase() : tr('type_badge_event').toUpperCase();
+  const locale     = lang === 'en' ? 'en-US' : 'es-CR';
+  const dateStr    = item.event_date
+    ? new Date(item.event_date + 'T00:00:00').toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+    : null;
 
   return (
     <Link href={href} style={{ textDecoration: 'none' }}>
-      <div style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'border-color 0.15s' }}
+      <div style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'border-color 0.15s' }}
         onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
         onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
-        <div>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{item.event_name}</p>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)' }}>
-            {tr('updated')} {new Date(item.updated_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-CR')}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{item.event_name}</p>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', background: badgeColor, color: badgeText, borderRadius: 4, padding: '3px 7px', flexShrink: 0 }}>
+            {badgeLabel}
+          </span>
         </div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', background: badgeColor, color: badgeText, borderRadius: 4, padding: '3px 7px' }}>
-          {badgeLabel}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {item.venue && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ opacity: 0.5 }}>📍</span> {item.venue}
+            </p>
+          )}
+          {dateStr && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ opacity: 0.5 }}>📅</span> {dateStr}
+            </p>
+          )}
+          {!item.venue && !dateStr && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', opacity: 0.5 }}>
+              {tr('updated')} {new Date(item.updated_at).toLocaleDateString(locale)}
+            </p>
+          )}
+        </div>
       </div>
     </Link>
   );
