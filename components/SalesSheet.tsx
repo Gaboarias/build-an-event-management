@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { EventConfig, TicketSale, EventZone } from '@/lib/db';
+import type { EventConfig, EventType, TicketSale, EventZone } from '@/lib/db';
 import { type Lang, makeTr } from '@/lib/i18n';
 
 interface Props {
   eventId: number;
   cfg: EventConfig;
+  type: EventType;
   money: (crc: number, signed?: boolean) => string;
   fromCurrent: (val: number) => number;
   lang: Lang;
@@ -38,21 +39,23 @@ const PAYMENT_COLORS: Record<string, string> = {
 };
 
 
-export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang, customZones, onCollectedChange }: Props) {
+export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toCurrent, sym, lang, customZones, onCollectedChange }: Props) {
   const tr = makeTr(lang);
 
   const frozenDefaultKeys: string[] = (() => {
     try { return JSON.parse((cfg as any).frozen_zones || '[]'); } catch { return []; }
   })();
 
-  const allZones = [
-    ...ZONES
-      .filter(z => !frozenDefaultKeys.includes(z.key))
-      .map(z => ({ value: z.key, label: tr(z.zoneKey), price: cfg[z.priceKey] as number, isCustom: false })),
-    ...customZones
-      .filter(z => !z.frozen)
-      .map(z => ({ value: `cz_${z.id}`, label: z.name, price: z.price, isCustom: true })),
-  ];
+  const allZones = type === 'seminar'
+    ? [{ value: 'general', label: tr('lbl_attendees'), price: cfg.price_gen, isCustom: false }]
+    : [
+        ...ZONES
+          .filter(z => !frozenDefaultKeys.includes(z.key))
+          .map(z => ({ value: z.key, label: tr(z.zoneKey), price: cfg[z.priceKey] as number, isCustom: false })),
+        ...customZones
+          .filter(z => !z.frozen)
+          .map(z => ({ value: `cz_${z.id}`, label: z.name, price: z.price, isCustom: true })),
+      ];
   const [sales, setSales]     = useState<TicketSale[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);

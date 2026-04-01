@@ -99,6 +99,13 @@ const translations = {
     vip_fixed: 'VIP fijo en',
     matrix_frozen_note: 'congelada — excluida del cálculo',
 
+    // Seminar-specific
+    price_seminar_fee: 'Tarifa de Seminario',
+    cap_seminar: 'Capacidad máxima de asistentes',
+    lbl_attendees: 'Asistentes',
+    matrix_seminar_title: 'Proyección por asistencia',
+    seminar_fill_rate: 'Ocupación',
+
     // Sales sheet
     sales_title: 'Hoja de Ventas',
     collected: 'Cobrado',
@@ -302,6 +309,13 @@ const translations = {
     matrix_title: 'P&L Matrix — General × Lounge individual',
     vip_fixed: 'VIP fixed at',
     matrix_frozen_note: 'frozen — excluded from calculation',
+
+    // Seminar-specific
+    price_seminar_fee: 'Seminar Fee',
+    cap_seminar: 'Max attendee capacity',
+    lbl_attendees: 'Attendees',
+    matrix_seminar_title: 'Attendance Projection',
+    seminar_fill_rate: 'Fill rate',
 
     // Sales sheet
     sales_title: 'Sales Sheet',

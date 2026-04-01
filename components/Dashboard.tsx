@@ -125,7 +125,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const costNeto = expenses.reduce((s, e) => s + e.amount, 0);
   const rev  = calcRev(gen, vip, li, lm, cfg);
   const pl   = rev - costNeto;
-  const pers = gen + vip + li + lm * 3;
+  const pers = type === 'seminar' ? gen : gen + vip + li + lm * 3;
   const pct  = costNeto > 0 ? Math.min((rev / costNeto) * 100, 100) : 0;
 
   const plColor  = pl > 5000 ? 'var(--green)' : pl >= -20000 ? 'var(--amber)' : 'var(--red)';
@@ -373,11 +373,14 @@ export default function Dashboard({ initialConfig, type }: Props) {
               <div>
                 <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('capacity_title')}</p>
                 <div style={{ display: 'grid', gap: 12 }}>
-                  {([
-                    { key: 'cap_gen',    label: tr('cap_gen') },
-                    { key: 'cap_vip',    label: tr('cap_vip') },
-                    { key: 'cap_lounge', label: tr('cap_lounge') },
-                  ] as const).map(f => (
+                  {(type === 'seminar'
+                    ? [{ key: 'cap_gen' as const, label: tr('cap_seminar') }]
+                    : [
+                        { key: 'cap_gen'    as const, label: tr('cap_gen') },
+                        { key: 'cap_vip'    as const, label: tr('cap_vip') },
+                        { key: 'cap_lounge' as const, label: tr('cap_lounge') },
+                      ]
+                  ).map(f => (
                     <div key={f.key}>
                       <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{f.label}</label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -426,8 +429,8 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </div>
             </div>
 
-            {/* Zones */}
-            <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
+            {/* Zones — events only */}
+            {type !== 'seminar' && <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16 }}>
               <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('default_zones_title')}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
                 {([
@@ -484,7 +487,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                   {tr('add_zone')}
                 </button>
               </div>
-            </div>
+            </div>}
 
             {/* Save + Reactivate */}
             <div style={{ marginTop: 20, borderTop: '0.5px solid var(--border)', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -581,7 +584,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
 
         {/* Sales Sheet */}
-        <SalesSheet eventId={eventId} cfg={cfg} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} customZones={customZones} onCollectedChange={setCollectedRevenue} />
+        <SalesSheet eventId={eventId} cfg={cfg} type={type} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} customZones={customZones} onCollectedChange={setCollectedRevenue} />
 
         {/* Progress bar */}
         <div>
@@ -604,20 +607,30 @@ export default function Dashboard({ initialConfig, type }: Props) {
               </span>
             </h2>
             <div style={{ display: 'grid', gap: 12 }}>
-              {([
-                { key: 'price_gen',         zoneKey: 'general',     label: `${tr('lbl_gen')} (${sym})`,            note: `${tr('max')} ${draft.cap_gen} ${tr('people')}` },
-                { key: 'price_vip',         zoneKey: 'vip',         label: `${tr('lbl_vip')} (${sym})`,            note: `${tr('max')} ${draft.cap_vip} ${tr('people')}` },
-                { key: 'price_lounge_ind',  zoneKey: 'lounge_ind',  label: `${tr('lbl_lounge_ind')} (${sym})`,     note: `${tr('max')} ${draft.cap_lounge} ${tr('people')}` },
-                { key: 'price_lounge_mesa', zoneKey: 'lounge_mesa', label: `${tr('lbl_lounge_mesa')} (${sym})`,    note: `≈ ${sym}${Math.round(toCurrent(draft.price_lounge_mesa) / 3).toLocaleString(locale, { maximumFractionDigits: decs })}/${tr('per_person')}` },
-              ] as const).filter(f => !frozenDefaultZones.includes(f.zoneKey)).map(f => (
-                <div key={f.key}>
-                  <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{f.label}</label>
-                  <input type="number" value={draftDisplay[f.key]}
-                    onChange={e => setDraft(d => ({ ...d, [f.key]: Math.round(fromCurrent(+e.target.value)) }))}
+              {type === 'seminar' ? (
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{tr('price_seminar_fee')} ({sym})</label>
+                  <input type="number" value={draftDisplay.price_gen}
+                    onChange={e => setDraft(d => ({ ...d, price_gen: Math.round(fromCurrent(+e.target.value)) }))}
                     step={currency === 'CRC' ? 500 : 1} min={0} />
-                  <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{f.note}</p>
+                  <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{tr('max')} {draft.cap_gen} {tr('people')}</p>
                 </div>
-              ))}
+              ) : (
+                ([
+                  { key: 'price_gen',         zoneKey: 'general',     label: `${tr('lbl_gen')} (${sym})`,            note: `${tr('max')} ${draft.cap_gen} ${tr('people')}` },
+                  { key: 'price_vip',         zoneKey: 'vip',         label: `${tr('lbl_vip')} (${sym})`,            note: `${tr('max')} ${draft.cap_vip} ${tr('people')}` },
+                  { key: 'price_lounge_ind',  zoneKey: 'lounge_ind',  label: `${tr('lbl_lounge_ind')} (${sym})`,     note: `${tr('max')} ${draft.cap_lounge} ${tr('people')}` },
+                  { key: 'price_lounge_mesa', zoneKey: 'lounge_mesa', label: `${tr('lbl_lounge_mesa')} (${sym})`,    note: `≈ ${sym}${Math.round(toCurrent(draft.price_lounge_mesa) / 3).toLocaleString(locale, { maximumFractionDigits: decs })}/${tr('per_person')}` },
+                ] as const).filter(f => !frozenDefaultZones.includes(f.zoneKey)).map(f => (
+                  <div key={f.key}>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{f.label}</label>
+                    <input type="number" value={draftDisplay[f.key]}
+                      onChange={e => setDraft(d => ({ ...d, [f.key]: Math.round(fromCurrent(+e.target.value)) }))}
+                      step={currency === 'CRC' ? 500 : 1} min={0} />
+                    <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{f.note}</p>
+                  </div>
+                ))
+              )}
             </div>
             <button onClick={saveConfig} disabled={saving}
               style={{ marginTop: 16, width: '100%', background: saved ? 'var(--green)' : 'var(--accent)', color: '#fff', opacity: saving ? 0.6 : 1 }}>
@@ -629,12 +642,15 @@ export default function Dashboard({ initialConfig, type }: Props) {
           <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('simulator_title')}</h2>
             <div style={{ display: 'grid', gap: 14 }}>
-              {([
-                { zoneKey: 'general',     label: tr('lbl_gen'),        val: gen, set: setGen, max: cfg.cap_gen,    bigStep: 5 },
-                { zoneKey: 'vip',         label: tr('lbl_vip'),        val: vip, set: setVip, max: cfg.cap_vip,    bigStep: 5 },
-                { zoneKey: 'lounge_ind',  label: tr('lbl_lounge_ind'), val: li,  set: setLi,  max: cfg.cap_lounge, bigStep: 1 },
-                { zoneKey: 'lounge_mesa', label: tr('lounge_tables'),  val: lm,  set: setLm,  max: 8,              bigStep: 1, sub: `${lm * 3} ${tr('lounge_people')}` },
-              ]).filter(s => !frozenDefaultZones.includes(s.zoneKey)).map(s => (
+              {(type === 'seminar'
+                ? [{ zoneKey: 'general', label: tr('lbl_attendees'), val: gen, set: setGen, max: cfg.cap_gen, bigStep: 5 }]
+                : ([
+                    { zoneKey: 'general',     label: tr('lbl_gen'),        val: gen, set: setGen, max: cfg.cap_gen,    bigStep: 5 },
+                    { zoneKey: 'vip',         label: tr('lbl_vip'),        val: vip, set: setVip, max: cfg.cap_vip,    bigStep: 5 },
+                    { zoneKey: 'lounge_ind',  label: tr('lbl_lounge_ind'), val: li,  set: setLi,  max: cfg.cap_lounge, bigStep: 1 },
+                    { zoneKey: 'lounge_mesa', label: tr('lounge_tables'),  val: lm,  set: setLm,  max: 8,              bigStep: 1, sub: `${lm * 3} ${tr('lounge_people')}` },
+                  ] as { zoneKey: string; label: string; val: number; set: (v: number) => void; max: number; bigStep: number; sub?: string }[]).filter(s => !frozenDefaultZones.includes(s.zoneKey))
+              ).map(s => (
                 <div key={s.label}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
@@ -805,8 +821,45 @@ export default function Dashboard({ initialConfig, type }: Props) {
           )}
         </section>
 
-        {/* P&L Matrix */}
-        {(() => {
+        {/* P&L Matrix / Seminar Projection */}
+        {type === 'seminar' ? (() => {
+          const fillSteps = [0.10, 0.25, 0.50, 0.60, 0.75, 0.90, 1.00];
+          return (
+            <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
+              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('matrix_seminar_title')}</h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 12, width: '100%' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
+                      {[tr('seminar_fill_rate'), tr('lbl_attendees'), tr('col_revenue'), tr('kpi_pl')].map(h => (
+                        <th key={h} style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fillSteps.map(pct2 => {
+                      const att = Math.round(cfg.cap_gen * pct2);
+                      const r2  = att * cfg.price_gen;
+                      const p   = r2 - costNeto;
+                      const isCurrent = att === gen;
+                      let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';
+                      if (p >= 0)            { bg = 'rgba(52,211,153,0.12)';  clr = '#34d399'; }
+                      else if (p >= -150000) { bg = 'rgba(251,191,36,0.12)';  clr = '#fbbf24'; }
+                      return (
+                        <tr key={pct2} style={{ borderBottom: '0.5px solid var(--border)', background: isCurrent ? 'rgba(124,109,250,0.08)' : 'transparent', outline: isCurrent ? '1.5px solid var(--accent)' : 'none', outlineOffset: '-1px' }}>
+                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', background: 'var(--bg3)', color: isCurrent ? 'var(--accent2)' : 'var(--muted)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{Math.round(pct2 * 100)}%</td>
+                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', color: isCurrent ? 'var(--accent2)' : 'var(--text)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{att}</td>
+                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', color: isCurrent ? 'var(--accent2)' : 'var(--text)', textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{money(r2)}</td>
+                          <td style={{ padding: '8px 12px', border: '0.5px solid var(--border)', background: isCurrent ? 'rgba(124,109,250,0.2)' : bg, color: isCurrent ? 'var(--accent2)' : clr, textAlign: 'center', fontWeight: isCurrent ? 700 : 400 }}>{money(p, true)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          );
+        })() : (() => {
           const isVIPFrozen      = frozenDefaultZones.includes('vip');
           const isGenFrozen      = frozenDefaultZones.includes('general');
           const isLoungeIndFrozen = frozenDefaultZones.includes('lounge_ind');
