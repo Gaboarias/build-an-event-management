@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { EventListItem, EventType } from '@/lib/db';
 import { type Lang, makeTr, getLang, setLang } from '@/lib/i18n';
+import { useTheme, type Theme } from './ThemeProvider';
 
 interface Props {
   events: EventListItem[];
@@ -132,12 +133,14 @@ function Section({ title, items, type, buttonLabel, noItemsLabel, lang }: {
 
 export default function HomePage({ events, seminars }: Props) {
   const [lang, setLangState] = useState<Lang>('es');
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setLangState(getLang());
   }, []);
 
   const tr = makeTr(lang);
+  const mono = { fontFamily: 'var(--font-mono)' };
 
   function toggleLang() {
     const next: Lang = lang === 'es' ? 'en' : 'es';
@@ -145,15 +148,30 @@ export default function HomePage({ events, seminars }: Props) {
     setLang(next);
   }
 
+  const themes: { key: Theme; icon: string }[] = [
+    { key: 'dark',       icon: '🌙' },
+    { key: 'light',      icon: '☀️' },
+    { key: 'colorblind', icon: '◑'  },
+  ];
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <header style={{ borderBottom: '0.5px solid var(--border)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
-          <p style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{tr('home_subtitle')}</p>
+          <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginTop: 2 }}>{tr('home_subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={toggleLang} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 8, padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Theme switcher */}
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 8, padding: 3 }}>
+            {themes.map(t => (
+              <button key={t.key} onClick={() => setTheme(t.key)} title={tr(`theme_${t.key}` as any)}
+                style={{ background: theme === t.key ? 'var(--accent)' : 'transparent', color: theme === t.key ? '#fff' : 'var(--muted)', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 13, cursor: 'pointer', fontWeight: 600, transition: 'background 0.15s' }}>
+                {t.icon}
+              </button>
+            ))}
+          </div>
+          <button onClick={toggleLang} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 8, padding: '6px 12px', ...mono, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
             {tr('lang_toggle')}
           </button>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)' }} />

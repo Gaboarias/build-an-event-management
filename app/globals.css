@@ -2,26 +2,80 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --bg:        #06060b;
-  --bg2:       #0e0e1a;
-  --bg3:       #161622;
-  --border:    rgba(255,255,255,0.12);
-  --border2:   rgba(255,255,255,0.24);
-  --text:      #f0f0f8;
-  --muted:     #a8a8c8;
-  --accent:    #7c6dfa;
-  --accent2:   #b8a4ff;
-  --green:     #34d399;
-  --red:       #f87171;
-  --amber:     #fbbf24;
+/* ─── Dark theme (default) ─────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --wem-bg-canvas:      #0A0F1E;
+  --wem-bg-surface:     #111827;
+  --wem-bg-card:        #1E2A42;
+  --wem-accent-primary: #2563EB;
+  --wem-accent-light:   #60A5FA;
+  --wem-text-primary:   #F8FAFC;
+  --wem-text-muted:     #94A3B8;
+  --wem-border:         rgba(255,255,255,0.08);
+  --wem-border2:        rgba(255,255,255,0.18);
+  --wem-status-active:  #34d399;
+  --wem-status-warn:    #fbbf24;
+  --wem-status-error:   #f87171;
+}
+
+/* ─── Light theme ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  --wem-bg-canvas:      #F0F6FF;
+  --wem-bg-surface:     #FFFFFF;
+  --wem-bg-card:        #DBEAFE;
+  --wem-accent-primary: #1D4ED8;
+  --wem-accent-light:   #2563EB;
+  --wem-text-primary:   #1E3A6E;
+  --wem-text-muted:     #475569;
+  --wem-border:         #93C5FD;
+  --wem-border2:        #3B82F6;
+  --wem-status-active:  #059669;
+  --wem-status-warn:    #D97706;
+  --wem-status-error:   #DC2626;
+}
+
+/* ─── Colorblind-safe theme (extends dark) ──────────────────────── */
+[data-theme="colorblind"] {
+  --wem-bg-canvas:      #0A0F1E;
+  --wem-bg-surface:     #111827;
+  --wem-bg-card:        #1E2A42;
+  --wem-accent-primary: #2563EB;
+  --wem-accent-light:   #60A5FA;
+  --wem-text-primary:   #F8FAFC;
+  --wem-text-muted:     #94A3B8;
+  --wem-border:         rgba(255,255,255,0.08);
+  --wem-border2:        rgba(255,255,255,0.18);
+  /* Status: blue / amber / teal — no red/green combo */
+  --wem-status-active:  #2563EB;
+  --wem-status-warn:    #F59E0B;
+  --wem-status-error:   #0D9488;
+}
+
+/* ─── Backward-compat aliases (used by existing components) ─────── */
+:root,
+[data-theme="dark"],
+[data-theme="light"],
+[data-theme="colorblind"] {
+  --bg:      var(--wem-bg-canvas);
+  --bg2:     var(--wem-bg-surface);
+  --bg3:     var(--wem-bg-card);
+  --text:    var(--wem-text-primary);
+  --muted:   var(--wem-text-muted);
+  --accent:  var(--wem-accent-primary);
+  --accent2: var(--wem-accent-light);
+  --border:  var(--wem-border);
+  --border2: var(--wem-border2);
+  --green:   var(--wem-status-active);
+  --amber:   var(--wem-status-warn);
+  --red:     var(--wem-status-error);
   --font-sans: 'Syne', sans-serif;
   --font-mono: 'DM Mono', monospace;
 }
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); }
 
-input[type=number], input[type=text] {
+input[type=number], input[type=text], input[type=date] {
   background: var(--bg3);
   border: 0.5px solid var(--border2);
   color: var(--text);
@@ -32,7 +86,7 @@ input[type=number], input[type=text] {
   width: 100%;
   transition: border-color 0.15s;
 }
-input[type=number]:focus, input[type=text]:focus {
+input[type=number]:focus, input[type=text]:focus, input[type=date]:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -52,6 +106,20 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--accent);
   cursor: pointer;
   border: 2px solid var(--bg);
+}
+select {
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+select:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 button {
   font-family: var(--font-sans);

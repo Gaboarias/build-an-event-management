@@ -200,6 +200,10 @@ const translations = {
     info_no_venue: 'Sin venue',
     info_no_date: 'Sin fecha',
 
+    theme_dark:        'Oscuro',
+    theme_light:       'Claro',
+    theme_colorblind:  'Accesible',
+
     home_subtitle: 'Wrestling Events Manager',
     section_events: 'Eventos',
     section_seminars: 'Seminarios',
@@ -414,6 +418,10 @@ const translations = {
     info_date_ph: 'Select date…',
     info_no_venue: 'No venue',
     info_no_date: 'No date',
+
+    theme_dark:        'Dark',
+    theme_light:       'Light',
+    theme_colorblind:  'Accessible',
 
     home_subtitle: 'Wrestling Events Manager',
     section_events: 'Events',

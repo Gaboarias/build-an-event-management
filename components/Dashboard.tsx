@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { EventConfig, EventType, SalesSnapshot, Expense, EventZone } from '@/lib/db';
 import SalesSheet from './SalesSheet';
 import { type Lang, makeTr, getLang, setLang } from '@/lib/i18n';
+import { useTheme, type Theme } from './ThemeProvider';
 
 interface Props {
   initialConfig: EventConfig;
@@ -72,6 +73,14 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [rateUSD, setRateUSD]           = useState(540);
   const [rateMXN, setRateMXN]           = useState(4);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Theme
+  const { theme, setTheme } = useTheme();
+  const themes: { key: Theme; icon: string }[] = [
+    { key: 'dark',       icon: '🌙' },
+    { key: 'light',      icon: '☀️' },
+    { key: 'colorblind', icon: '◑'  },
+  ];
 
   // Language
   const [lang, setLangState] = useState<Lang>('es');
@@ -347,6 +356,15 @@ export default function Dashboard({ initialConfig, type }: Props) {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Theme switcher */}
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 8, padding: 3 }}>
+            {themes.map(t => (
+              <button key={t.key} onClick={() => setTheme(t.key)} title={tr(`theme_${t.key}` as any)}
+                style={{ background: theme === t.key ? 'var(--accent)' : 'transparent', color: theme === t.key ? '#fff' : 'var(--muted)', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 13, cursor: 'pointer', transition: 'background 0.15s' }}>
+                {t.icon}
+              </button>
+            ))}
+          </div>
           {/* Language toggle */}
           <button onClick={toggleLang} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 8, padding: '6px 12px', ...mono, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
             {tr('lang_toggle')}
