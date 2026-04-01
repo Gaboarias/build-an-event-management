@@ -839,14 +839,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
         {/* P&L Matrix / Seminar Projection */}
         {type === 'seminar' ? (() => {
           const fillSteps = [0.10, 0.25, 0.50, 0.60, 0.75, 0.90, 1.00];
-          const extRevFixed = vip * cfg.price_vip;
           return (
             <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
-              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{tr('matrix_seminar_title')}</h2>
-              <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginBottom: 16 }}>
-                {tr('lbl_external_wrestlers')}: <strong style={{ color: 'var(--text)' }}>{vip}</strong>
-                {vip > 0 && <span style={{ marginLeft: 8, color: 'var(--accent2)' }}>+{money(extRevFixed)}</span>}
-              </p>
+              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('matrix_seminar_title')}</h2>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 12, width: '100%' }}>
                   <thead>
@@ -859,7 +854,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                   <tbody>
                     {fillSteps.map(pct2 => {
                       const att = Math.round(cfg.cap_gen * pct2);
-                      const r2  = att * cfg.price_gen + extRevFixed;
+                      const r2  = att * cfg.price_gen;
                       const p   = r2 - costNeto;
                       const isCurrent = att === gen;
                       let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';
