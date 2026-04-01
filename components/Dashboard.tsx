@@ -659,12 +659,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
                           <td style={{ padding: '4px 6px' }}>
                             {editExpId === e.id ? (
                               <input autoFocus value={editExpLabel} onChange={ev => setEditExpLabel(ev.target.value)}
-                                onBlur={saveExpenseEdit} onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
+                                onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
                                 placeholder={tr('desc_ph')} style={{ width: '100%', fontSize: 12, padding: '4px 8px' }} />
                             ) : (
-                              <span onClick={() => startEditExpense(e)}
-                                style={{ display: 'block', padding: '4px 8px', color: 'var(--text)', cursor: 'text', borderRadius: 4, minWidth: 80 }}
-                                title="Click to edit">
+                              <span style={{ display: 'block', padding: '4px 8px', color: 'var(--text)' }}>
                                 {e.label || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}
                               </span>
                             )}
@@ -672,18 +670,26 @@ export default function Dashboard({ initialConfig, type }: Props) {
                           <td style={{ padding: '4px 6px' }}>
                             {editExpId === e.id ? (
                               <input type="number" value={editExpAmount} onChange={ev => setEditExpAmount(ev.target.value)}
-                                onBlur={saveExpenseEdit} onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
+                                onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
                                 min={0} step={currency === 'CRC' ? 1000 : 1} style={{ width: '100%', fontSize: 12, padding: '4px 8px', fontWeight: 500 }} />
                             ) : (
-                              <span onClick={() => startEditExpense(e)}
-                                style={{ display: 'block', padding: '4px 8px', color: 'var(--text)', fontWeight: 500, cursor: 'text', borderRadius: 4 }}
-                                title="Click to edit">
+                              <span style={{ display: 'block', padding: '4px 8px', color: 'var(--text)', fontWeight: 500 }}>
                                 {money(e.amount)}
                               </span>
                             )}
                           </td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <button onClick={() => deleteExpenseRow(e.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
+                          <td style={{ padding: '8px 6px', whiteSpace: 'nowrap' }}>
+                            {editExpId === e.id ? (
+                              <span style={{ display: 'flex', gap: 4 }}>
+                                <button onClick={saveExpenseEdit} style={{ background: 'var(--green)', color: '#fff', padding: '2px 10px', fontSize: 11, border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 600 }}>✓</button>
+                                <button onClick={() => setEditExpId(null)} style={{ background: 'transparent', color: 'var(--muted)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--border2)', cursor: 'pointer', borderRadius: 4 }}>✕</button>
+                              </span>
+                            ) : (
+                              <span style={{ display: 'flex', gap: 4 }}>
+                                <button onClick={() => startEditExpense(e)} style={{ background: 'transparent', color: 'var(--muted)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--border2)', cursor: 'pointer', borderRadius: 4 }}>✎</button>
+                                <button onClick={() => deleteExpenseRow(e.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
+                              </span>
+                            )}
                           </td>
                         </tr>
                         {i === rows.length - 1 && (
