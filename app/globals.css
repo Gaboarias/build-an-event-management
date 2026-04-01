@@ -2,18 +2,18 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ─── Dark theme — Midnight Blue ───────────────────────────────── */
+/* ─── Dark theme — Riot Black ───────────────────────────────────── */
 :root,
 [data-theme="dark"] {
-  --wem-bg-canvas:      #191971;
-  --wem-bg-surface:     #1f1f85;
-  --wem-bg-card:        #272792;
-  --wem-accent-primary: #1CA9C9;
-  --wem-accent-light:   #5bcde0;
-  --wem-text-primary:   #F8FAFC;
-  --wem-text-muted:     #b0bcd4;
-  --wem-border:         rgba(255,255,255,0.10);
-  --wem-border2:        rgba(255,255,255,0.22);
+  --wem-bg-canvas:      #0A0A0A;
+  --wem-bg-surface:     #111111;
+  --wem-bg-card:        #1A1A1A;
+  --wem-accent-primary: #CC1122;
+  --wem-accent-light:   #E8334A;
+  --wem-text-primary:   #F0EFE9;
+  --wem-text-muted:     #A8A8A0;
+  --wem-border:         rgba(255,255,255,0.09);
+  --wem-border2:        rgba(255,255,255,0.18);
   --wem-status-active:  #34d399;
   --wem-status-warn:    #fbbf24;
   --wem-status-error:   #f87171;
