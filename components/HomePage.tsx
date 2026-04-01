@@ -28,7 +28,7 @@ function CreateForm({ type, onCancel, onCreated, lang }: { type: EventType; onCa
       });
       if (!r.ok) { alert(lang === 'es' ? 'Error al crear. Verificá la conexión a la base de datos.' : 'Error creating. Check your database connection.'); return; }
       const item = await r.json();
-      onCreated({ id: item.id, event_name: item.event_name, type: item.type, updated_at: item.updated_at });
+      onCreated({ id: item.id, event_name: item.event_name, type: item.type, venue: item.venue ?? null, event_date: item.event_date ?? null, updated_at: item.updated_at });
       router.push(type === 'seminar' ? `/seminars/${item.id}` : `/events/${item.id}`);
     } finally {
       setLoading(false);
