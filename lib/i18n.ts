@@ -204,6 +204,10 @@ const translations = {
     theme_light:       'Claro',
     theme_colorblind:  'Accesible',
 
+    cal_title:       'Calendario',
+    cal_upcoming:    'Próximos',
+    cal_no_upcoming: 'Sin eventos próximos con fecha asignada.',
+
     home_subtitle: 'Wrestling Event Manager',
     section_events: 'Eventos',
     section_seminars: 'Seminarios',
@@ -422,6 +426,10 @@ const translations = {
     theme_dark:        'Dark',
     theme_light:       'Light',
     theme_colorblind:  'Accessible',
+
+    cal_title:       'Calendar',
+    cal_upcoming:    'Upcoming',
+    cal_no_upcoming: 'No upcoming events with a date assigned.',
 
     home_subtitle: 'Wrestling Event Manager',
     section_events: 'Events',
