@@ -57,6 +57,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [editInfoField, setEditInfoField] = useState<'event_name' | 'venue' | 'event_date' | null>(null);
   const [editInfoVal,   setEditInfoVal]   = useState('');
 
+  // Actual revenue from sales sheet
+  const [collectedRevenue, setCollectedRevenue] = useState(0);
+
   const [customZones, setCustomZones]     = useState<EventZone[]>([]);
   const [newZoneName, setNewZoneName]     = useState('');
   const [newZoneCap,  setNewZoneCap]      = useState('');
@@ -562,12 +565,13 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
 
         {/* KPI Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {[
-            { label: tr('kpi_expenses'), value: money(costNeto),   color: 'var(--accent2)' },
-            { label: tr('kpi_revenue'),  value: money(rev),        color: 'var(--text)' },
-            { label: tr('kpi_pl'),       value: money(pl, true),   color: plColor },
-            { label: tr('kpi_people'),   value: pers.toString(),   color: 'var(--text)' },
+            { label: tr('kpi_expenses'),   value: money(costNeto),         color: 'var(--accent2)' },
+            { label: tr('kpi_revenue'),    value: money(rev),              color: 'var(--text)' },
+            { label: tr('kpi_actual_rev'), value: money(collectedRevenue), color: collectedRevenue === 0 ? 'var(--muted)' : collectedRevenue >= costNeto ? 'var(--green)' : 'var(--red)' },
+            { label: tr('kpi_pl'),         value: money(pl, true),         color: plColor },
+            { label: tr('kpi_people'),     value: pers.toString(),         color: 'var(--text)' },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
               <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{k.label}</p>
@@ -577,7 +581,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
 
         {/* Sales Sheet */}
-        <SalesSheet eventId={eventId} cfg={cfg} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} customZones={customZones} />
+        <SalesSheet eventId={eventId} cfg={cfg} money={money} fromCurrent={fromCurrent} toCurrent={toCurrent} sym={sym} lang={lang} customZones={customZones} onCollectedChange={setCollectedRevenue} />
 
         {/* Progress bar */}
         <div>

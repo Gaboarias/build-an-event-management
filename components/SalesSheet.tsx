@@ -13,6 +13,7 @@ interface Props {
   toCurrent: (crc: number) => number;
   sym: string;
   customZones: EventZone[];
+  onCollectedChange?: (amount: number) => void;
 }
 
 const ZONES = [
@@ -37,7 +38,7 @@ const PAYMENT_COLORS: Record<string, string> = {
 };
 
 
-export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang, customZones }: Props) {
+export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang, customZones, onCollectedChange }: Props) {
   const tr = makeTr(lang);
 
   const frozenDefaultKeys: string[] = (() => {
@@ -136,6 +137,8 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   const totalCollected = sales.filter(s => s.payment_method !== 'por_pagar').reduce((a, s) => a + s.total_amount, 0);
   const totalPending   = sales.filter(s => s.payment_method === 'por_pagar').reduce((a, s) => a + s.total_amount, 0);
   const totalTickets   = sales.reduce((a, s) => a + s.group_size, 0);
+
+  useEffect(() => { onCollectedChange?.(totalCollected); }, [totalCollected, onCollectedChange]);
 
   const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)' };
   const zoneLabel = (k: string) => { const z = ZONES.find(z => z.key === k); return z ? tr(z.zoneKey) : k; };

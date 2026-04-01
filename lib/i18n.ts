@@ -41,6 +41,7 @@ const translations = {
     // KPIs
     kpi_expenses: 'Gastos',
     kpi_revenue: 'Ingresos proyectados',
+    kpi_actual_rev: 'Ingresos actuales',
     kpi_pl: 'P&L',
     kpi_people: 'Personas',
     cost_covered: 'del costo cubierto',
@@ -242,6 +243,7 @@ const translations = {
     // KPIs
     kpi_expenses: 'Expenses',
     kpi_revenue: 'Projected Revenue',
+    kpi_actual_rev: 'Actual Revenue',
     kpi_pl: 'P&L',
     kpi_people: 'People',
     cost_covered: 'of cost covered',
