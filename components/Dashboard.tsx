@@ -178,7 +178,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
       if (action === 'delete') {
         const r = await fetch('/api/config', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId }) });
         if (!r.ok) { alert(tr('err_delete')); return; }
-        router.push('/');
+        window.location.href = '/';
       } else {
         const r = await fetch('/api/config', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId, status: action }) });
         if (!r.ok) { alert(tr('err_status')); return; }
