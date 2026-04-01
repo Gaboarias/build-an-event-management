@@ -3,6 +3,7 @@ import HomePage from '@/components/HomePage';
 import type { EventListItem } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
   let events: EventListItem[] = [];

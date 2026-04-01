@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export type EventType = 'event' | 'seminar';
 
@@ -42,6 +43,7 @@ export interface SalesSnapshot {
 }
 
 export async function getAllEvents(): Promise<EventListItem[]> {
+  noStore();
   const { rows } = await sql<EventListItem>`
     SELECT id, event_name, type, updated_at FROM event_config ORDER BY id
   `;
