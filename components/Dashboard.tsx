@@ -149,6 +149,15 @@ export default function Dashboard({ initialConfig, type }: Props) {
 
   useEffect(() => { loadSnapshots(); loadExpenses(); loadZones(); }, [loadSnapshots, loadExpenses, loadZones]);
 
+  // Reset simulator counts to 0 whenever a zone gets frozen
+  useEffect(() => {
+    if (frozenDefaultZones.includes('general'))     setGen(0);
+    if (frozenDefaultZones.includes('vip'))         setVip(0);
+    if (frozenDefaultZones.includes('lounge_ind'))  setLi(0);
+    if (frozenDefaultZones.includes('lounge_mesa')) setLm(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg.frozen_zones]);
+
   async function saveConfig() {
     setSaving(true);
     try {
@@ -527,11 +536,11 @@ export default function Dashboard({ initialConfig, type }: Props) {
             </h2>
             <div style={{ display: 'grid', gap: 12 }}>
               {([
-                { key: 'price_gen',         label: `${tr('lbl_gen')} (${sym})`,            note: `${tr('max')} ${draft.cap_gen} ${tr('people')}` },
-                { key: 'price_vip',         label: `${tr('lbl_vip')} (${sym})`,            note: `${tr('max')} ${draft.cap_vip} ${tr('people')}` },
-                { key: 'price_lounge_ind',  label: `${tr('lbl_lounge_ind')} (${sym})`,     note: `${tr('max')} ${draft.cap_lounge} ${tr('people')}` },
-                { key: 'price_lounge_mesa', label: `${tr('lbl_lounge_mesa')} (${sym})`,    note: `≈ ${sym}${Math.round(toCurrent(draft.price_lounge_mesa) / 3).toLocaleString(locale, { maximumFractionDigits: decs })}/${tr('per_person')}` },
-              ] as const).map(f => (
+                { key: 'price_gen',         zoneKey: 'general',     label: `${tr('lbl_gen')} (${sym})`,            note: `${tr('max')} ${draft.cap_gen} ${tr('people')}` },
+                { key: 'price_vip',         zoneKey: 'vip',         label: `${tr('lbl_vip')} (${sym})`,            note: `${tr('max')} ${draft.cap_vip} ${tr('people')}` },
+                { key: 'price_lounge_ind',  zoneKey: 'lounge_ind',  label: `${tr('lbl_lounge_ind')} (${sym})`,     note: `${tr('max')} ${draft.cap_lounge} ${tr('people')}` },
+                { key: 'price_lounge_mesa', zoneKey: 'lounge_mesa', label: `${tr('lbl_lounge_mesa')} (${sym})`,    note: `≈ ${sym}${Math.round(toCurrent(draft.price_lounge_mesa) / 3).toLocaleString(locale, { maximumFractionDigits: decs })}/${tr('per_person')}` },
+              ] as const).filter(f => !frozenDefaultZones.includes(f.zoneKey)).map(f => (
                 <div key={f.key}>
                   <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{f.label}</label>
                   <input type="number" value={draftDisplay[f.key]}
@@ -552,11 +561,11 @@ export default function Dashboard({ initialConfig, type }: Props) {
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('simulator_title')}</h2>
             <div style={{ display: 'grid', gap: 14 }}>
               {([
-                { label: tr('lbl_gen'),          val: gen, set: setGen, max: cfg.cap_gen,    bigStep: 5 },
-                { label: tr('lbl_vip'),          val: vip, set: setVip, max: cfg.cap_vip,    bigStep: 5 },
-                { label: tr('lbl_lounge_ind'),   val: li,  set: setLi,  max: cfg.cap_lounge, bigStep: 1 },
-                { label: tr('lounge_tables'),    val: lm,  set: setLm,  max: 8,              bigStep: 1, sub: `${lm * 3} ${tr('lounge_people')}` },
-              ]).map(s => (
+                { zoneKey: 'general',     label: tr('lbl_gen'),        val: gen, set: setGen, max: cfg.cap_gen,    bigStep: 5 },
+                { zoneKey: 'vip',         label: tr('lbl_vip'),        val: vip, set: setVip, max: cfg.cap_vip,    bigStep: 5 },
+                { zoneKey: 'lounge_ind',  label: tr('lbl_lounge_ind'), val: li,  set: setLi,  max: cfg.cap_lounge, bigStep: 1 },
+                { zoneKey: 'lounge_mesa', label: tr('lounge_tables'),  val: lm,  set: setLm,  max: 8,              bigStep: 1, sub: `${lm * 3} ${tr('lounge_people')}` },
+              ]).filter(s => !frozenDefaultZones.includes(s.zoneKey)).map(s => (
                 <div key={s.label}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
