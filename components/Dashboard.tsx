@@ -12,11 +12,11 @@ interface Props {
   type: EventType;
 }
 
-// Expense categories stored in DB (always Spanish keys)
-const EXPENSE_CATEGORIES = ['Luces y Sonido', 'Alquiler', 'Transporte', 'Luchador', 'Vuelo', 'Grabacion', 'Sillas', 'Estadia'] as const;
+// Expense categories stored in DB
+const EXPENSE_CATEGORIES = ['Luces y Sonido', 'Venue', 'Transporte', 'Luchador', 'Vuelo', 'Grabacion', 'Sillas', 'Estadia'] as const;
 
 const CAT_KEY_MAP: Record<string, 'cat_luces'|'cat_alquiler'|'cat_transporte'|'cat_luchador'|'cat_vuelo'|'cat_grabacion'|'cat_sillas'|'cat_estadia'> = {
-  'Luces y Sonido': 'cat_luces', 'Alquiler': 'cat_alquiler', 'Transporte': 'cat_transporte',
+  'Luces y Sonido': 'cat_luces', 'Venue': 'cat_alquiler', 'Alquiler': 'cat_alquiler', 'Transporte': 'cat_transporte',
   'Luchador': 'cat_luchador', 'Vuelo': 'cat_vuelo', 'Grabacion': 'cat_grabacion',
   'Sillas': 'cat_sillas', 'Estadia': 'cat_estadia',
 };
@@ -49,6 +49,9 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [newExpLabel, setNewExpLabel] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
   const [addingExp, setAddingExp]     = useState(false);
+  const [editExpId,    setEditExpId]    = useState<number | null>(null);
+  const [editExpLabel, setEditExpLabel] = useState('');
+  const [editExpAmount, setEditExpAmount] = useState('');
 
   const [customZones, setCustomZones]     = useState<EventZone[]>([]);
   const [newZoneName, setNewZoneName]     = useState('');
@@ -226,6 +229,21 @@ export default function Dashboard({ initialConfig, type }: Props) {
 
   async function deleteExpenseRow(id: number) {
     await fetch('/api/expenses', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    loadExpenses();
+  }
+
+  function startEditExpense(e: Expense) {
+    setEditExpId(e.id);
+    setEditExpLabel(e.label ?? '');
+    setEditExpAmount(String(Math.round(toCurrent(e.amount))));
+  }
+
+  async function saveExpenseEdit() {
+    if (editExpId === null) return;
+    const rawAmount = Math.round(fromCurrent(Number(editExpAmount) || 0));
+    await fetch('/api/expenses', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editExpId, label: editExpLabel.trim() || null, amount: rawAmount }) });
+    setEditExpId(null);
     loadExpenses();
   }
 
@@ -638,8 +656,32 @@ export default function Dashboard({ initialConfig, type }: Props) {
                       <>
                         <tr key={e.id} style={{ borderBottom: '0.5px solid var(--border)' }}>
                           <td style={{ padding: '8px 10px', color: 'var(--muted)' }}>{i === 0 ? catLabel : ''}</td>
-                          <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{e.label || '—'}</td>
-                          <td style={{ padding: '8px 10px', color: 'var(--text)', fontWeight: 500 }}>{money(e.amount)}</td>
+                          <td style={{ padding: '4px 6px' }}>
+                            {editExpId === e.id ? (
+                              <input autoFocus value={editExpLabel} onChange={ev => setEditExpLabel(ev.target.value)}
+                                onBlur={saveExpenseEdit} onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
+                                placeholder={tr('desc_ph')} style={{ width: '100%', fontSize: 12, padding: '4px 8px' }} />
+                            ) : (
+                              <span onClick={() => startEditExpense(e)}
+                                style={{ display: 'block', padding: '4px 8px', color: 'var(--text)', cursor: 'text', borderRadius: 4, minWidth: 80 }}
+                                title="Click to edit">
+                                {e.label || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '4px 6px' }}>
+                            {editExpId === e.id ? (
+                              <input type="number" value={editExpAmount} onChange={ev => setEditExpAmount(ev.target.value)}
+                                onBlur={saveExpenseEdit} onKeyDown={ev => ev.key === 'Enter' && saveExpenseEdit()}
+                                min={0} step={currency === 'CRC' ? 1000 : 1} style={{ width: '100%', fontSize: 12, padding: '4px 8px', fontWeight: 500 }} />
+                            ) : (
+                              <span onClick={() => startEditExpense(e)}
+                                style={{ display: 'block', padding: '4px 8px', color: 'var(--text)', fontWeight: 500, cursor: 'text', borderRadius: 4 }}
+                                title="Click to edit">
+                                {money(e.amount)}
+                              </span>
+                            )}
+                          </td>
                           <td style={{ padding: '8px 10px' }}>
                             <button onClick={() => deleteExpenseRow(e.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
                           </td>

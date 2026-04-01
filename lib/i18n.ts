@@ -155,7 +155,7 @@ const translations = {
 
     // Expense categories
     cat_luces: 'Luces y Sonido',
-    cat_alquiler: 'Alquiler',
+    cat_alquiler: 'Venue',
     cat_transporte: 'Transporte',
     cat_luchador: 'Luchador',
     cat_vuelo: 'Vuelo',
@@ -347,7 +347,7 @@ const translations = {
 
     // Expense categories
     cat_luces: 'Lights & Sound',
-    cat_alquiler: 'Rental',
+    cat_alquiler: 'Venue',
     cat_transporte: 'Transport',
     cat_luchador: 'Wrestler',
     cat_vuelo: 'Flight',
