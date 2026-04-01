@@ -2,18 +2,18 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ─── Dark theme (default) ─────────────────────────────────────── */
+/* ─── Dark theme — Midnight Blue ───────────────────────────────── */
 :root,
 [data-theme="dark"] {
-  --wem-bg-canvas:      #0A0F1E;
-  --wem-bg-surface:     #111827;
-  --wem-bg-card:        #1E2A42;
-  --wem-accent-primary: #2563EB;
-  --wem-accent-light:   #60A5FA;
+  --wem-bg-canvas:      #191971;
+  --wem-bg-surface:     #1f1f85;
+  --wem-bg-card:        #272792;
+  --wem-accent-primary: #1CA9C9;
+  --wem-accent-light:   #5bcde0;
   --wem-text-primary:   #F8FAFC;
-  --wem-text-muted:     #94A3B8;
-  --wem-border:         rgba(255,255,255,0.08);
-  --wem-border2:        rgba(255,255,255,0.18);
+  --wem-text-muted:     #b0bcd4;
+  --wem-border:         rgba(255,255,255,0.10);
+  --wem-border2:        rgba(255,255,255,0.22);
   --wem-status-active:  #34d399;
   --wem-status-warn:    #fbbf24;
   --wem-status-error:   #f87171;
@@ -24,8 +24,8 @@
   --wem-bg-canvas:      #F0F6FF;
   --wem-bg-surface:     #FFFFFF;
   --wem-bg-card:        #DBEAFE;
-  --wem-accent-primary: #1D4ED8;
-  --wem-accent-light:   #2563EB;
+  --wem-accent-primary: #1CA9C9;
+  --wem-accent-light:   #0e7fa0;
   --wem-text-primary:   #1E3A6E;
   --wem-text-muted:     #475569;
   --wem-border:         #93C5FD;
@@ -35,21 +35,21 @@
   --wem-status-error:   #DC2626;
 }
 
-/* ─── Colorblind-safe theme (extends dark) ──────────────────────── */
+/* ─── Colorblind-safe theme — dark charcoal + safe status colors ── */
 [data-theme="colorblind"] {
-  --wem-bg-canvas:      #0A0F1E;
-  --wem-bg-surface:     #111827;
-  --wem-bg-card:        #1E2A42;
-  --wem-accent-primary: #2563EB;
-  --wem-accent-light:   #60A5FA;
+  --wem-bg-canvas:      #0d0d14;
+  --wem-bg-surface:     #141420;
+  --wem-bg-card:        #1c1c2e;
+  --wem-accent-primary: #1CA9C9;
+  --wem-accent-light:   #5bcde0;
   --wem-text-primary:   #F8FAFC;
   --wem-text-muted:     #94A3B8;
-  --wem-border:         rgba(255,255,255,0.08);
-  --wem-border2:        rgba(255,255,255,0.18);
-  /* Status: blue / amber / teal — no red/green combo */
-  --wem-status-active:  #2563EB;
+  --wem-border:         rgba(255,255,255,0.10);
+  --wem-border2:        rgba(255,255,255,0.20);
+  /* Status: teal / amber / blue — no red/green combo */
+  --wem-status-active:  #0D9488;
   --wem-status-warn:    #F59E0B;
-  --wem-status-error:   #0D9488;
+  --wem-status-error:   #2563EB;
 }
 
 /* ─── Backward-compat aliases (used by existing components) ─────── */
