@@ -2,28 +2,30 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { EventConfig, TicketSale } from '@/lib/db';
+import { type Lang, makeTr } from '@/lib/i18n';
 
 interface Props {
   eventId: number;
   cfg: EventConfig;
   money: (crc: number, signed?: boolean) => string;
   fromCurrent: (val: number) => number;
+  lang: Lang;
   toCurrent: (crc: number) => number;
   sym: string;
 }
 
 const ZONES = [
-  { key: 'general',    label: 'General',           priceKey: 'price_gen' as const },
-  { key: 'vip',        label: 'VIP',               priceKey: 'price_vip' as const },
-  { key: 'lounge_ind', label: 'Lounge Individual', priceKey: 'price_lounge_ind' as const },
-  { key: 'lounge_mesa',label: 'Mesa Lounge',       priceKey: 'price_lounge_mesa' as const },
+  { key: 'general',     zoneKey: 'zone_general'     as const, priceKey: 'price_gen'         as const },
+  { key: 'vip',         zoneKey: 'zone_vip'         as const, priceKey: 'price_vip'         as const },
+  { key: 'lounge_ind',  zoneKey: 'zone_lounge_ind'  as const, priceKey: 'price_lounge_ind'  as const },
+  { key: 'lounge_mesa', zoneKey: 'zone_lounge_mesa' as const, priceKey: 'price_lounge_mesa' as const },
 ];
 
-const PAYMENT_METHODS = [
-  { key: 'sinpe',     label: 'Sinpe Móvil',  free: false },
-  { key: 'efectivo',  label: 'Efectivo',     free: false },
-  { key: 'por_pagar', label: 'Por Pagar',    free: true  },
-  { key: 'special',   label: 'SpecialTicket',free: true  },
+const PAYMENT_KEYS = [
+  { key: 'sinpe',     payKey: 'pay_sinpe'   as const, free: false },
+  { key: 'efectivo',  payKey: 'pay_cash'    as const, free: false },
+  { key: 'por_pagar', payKey: 'pay_pending' as const, free: true  },
+  { key: 'special',   payKey: 'pay_special' as const, free: true  },
 ];
 
 const PAYMENT_COLORS: Record<string, string> = {
@@ -33,12 +35,9 @@ const PAYMENT_COLORS: Record<string, string> = {
   special:   '#c084fc',
 };
 
-const PAYMENT_LABELS: Record<string, string> = {
-  sinpe: 'Sinpe', efectivo: 'Efectivo', por_pagar: 'Por Pagar', special: 'Special',
-};
 
-
-export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym }: Props) {
+export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent, sym, lang }: Props) {
+  const tr = makeTr(lang);
   const [sales, setSales]     = useState<TicketSale[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -64,7 +63,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
   // Derived pricing
   const selectedZone    = ZONES.find(z => z.key === zone)!;
-  const selectedPayment = PAYMENT_METHODS.find(p => p.key === paymentMethod)!;
+  const selectedPayment = PAYMENT_KEYS.find(p => p.key === paymentMethod)!;
   const isFree          = selectedPayment.free;
 
   const baseUnitPriceCRC = isFree ? 0 : cfg[selectedZone.priceKey];
@@ -83,7 +82,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   function closeModal() { setShowModal(false); }
 
   async function confirmSale() {
-    if (!buyerName.trim()) { alert('Ingresá el nombre del comprador.'); return; }
+    if (!buyerName.trim()) { alert(tr('err_buyer')); return; }
     setSaving(true);
     try {
       const unitCRC  = isFree ? 0 : fromCurrent(unitPriceDisplay);
@@ -103,14 +102,14 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
           notes:          notes.trim() || null,
         }),
       });
-      if (!r.ok) { alert('Error al guardar la venta.'); return; }
+      if (!r.ok) { alert(tr('err_sale')); return; }
       closeModal();
       loadSales();
     } finally { setSaving(false); }
   }
 
   async function deleteSaleRow(id: number) {
-    if (!confirm('¿Eliminar esta venta?')) return;
+    if (!confirm(tr('confirm_delete_sale'))) return;
     await fetch('/api/sales', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -125,7 +124,8 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
   const totalTickets   = sales.reduce((a, s) => a + s.group_size, 0);
 
   const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)' };
-  const zoneLabel = (k: string) => ZONES.find(z => z.key === k)?.label ?? k;
+  const zoneLabel = (k: string) => { const z = ZONES.find(z => z.key === k); return z ? tr(z.zoneKey) : k; };
+  const payLabel  = (k: string) => { const p = PAYMENT_KEYS.find(p => p.key === k); return p ? tr(p.payKey) : k; };
 
   return (
     <>
@@ -134,19 +134,19 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Hoja de Ventas {loading && <span>…</span>}
+              {tr('sales_title')} {loading && <span>…</span>}
             </h2>
             <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-              <span style={{ fontSize: 12, ...mono, color: 'var(--green)' }}>Cobrado: {money(totalCollected)}</span>
-              {totalPending > 0 && <span style={{ fontSize: 12, ...mono, color: '#fbbf24' }}>Pendiente: {money(totalPending)}</span>}
-              <span style={{ fontSize: 12, ...mono, color: 'var(--muted)' }}>{totalTickets} ticket{totalTickets !== 1 ? 's' : ''}</span>
+              <span style={{ fontSize: 12, ...mono, color: 'var(--green)' }}>{tr('collected')}: {money(totalCollected)}</span>
+              {totalPending > 0 && <span style={{ fontSize: 12, ...mono, color: '#fbbf24' }}>{tr('pending_label')}: {money(totalPending)}</span>}
+              <span style={{ fontSize: 12, ...mono, color: 'var(--muted)' }}>{totalTickets} {totalTickets !== 1 ? tr('tickets_plural') : tr('tickets_label')}</span>
             </div>
           </div>
           <button
             onClick={openModal}
             style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', ...mono, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            + Nueva Venta
+            {tr('new_sale')}
           </button>
         </div>
 
@@ -154,7 +154,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr auto', gap: 8, marginBottom: 16, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)' }}>
           <input
             type="text"
-            placeholder="Nombre del comprador…"
+            placeholder={tr('name_ph')}
             value={buyerName}
             onChange={e => setBuyerName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && openModal()}
@@ -165,14 +165,14 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             onChange={e => setZone(e.target.value)}
             style={{ background: 'var(--bg)', border: '0.5px solid var(--border2)', color: 'var(--text)', ...mono, fontSize: 13, borderRadius: 6, padding: '8px 12px' }}
           >
-            {ZONES.map(z => <option key={z.key} value={z.key}>{z.label}</option>)}
+            {ZONES.map(z => <option key={z.key} value={z.key}>{tr(z.zoneKey)}</option>)}
           </select>
           <select
             value={paymentMethod}
             onChange={e => setPaymentMethod(e.target.value)}
             style={{ background: 'var(--bg)', border: '0.5px solid var(--border2)', color: PAYMENT_COLORS[paymentMethod] ?? 'var(--text)', ...mono, fontSize: 13, borderRadius: 6, padding: '8px 12px' }}
           >
-            {PAYMENT_METHODS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+            {PAYMENT_KEYS.map(p => <option key={p.key} value={p.key}>{tr(p.payKey)}</option>)}
           </select>
           <button
             onClick={() => {
@@ -187,19 +187,19 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             }}
             style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 16px', ...mono, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
-            Registrar →
+            {tr('register_btn')}
           </button>
         </div>
 
         {/* Sales table */}
         {sales.length === 0 ? (
-          <p style={{ fontSize: 12, color: 'var(--muted)', ...mono }}>No hay ventas registradas aún. Hacé clic en <strong>+ Nueva Venta</strong> para empezar.</p>
+          <p style={{ fontSize: 12, color: 'var(--muted)', ...mono }}>{tr('no_sales')} <strong>{tr('new_sale')}</strong> {tr('no_sales2')}</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', ...mono, fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '0.5px solid var(--border2)' }}>
-                  {['#','Nombre','Localidad','Tipo','Cant.','Método','Monto','Fecha',''].map(h => (
+                  {['#', tr('col_name'), tr('col_zone'), tr('col_type'), tr('col_qty'), tr('col_method'), tr('col_amount'), tr('col_date'), ''].map(h => (
                     <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--muted)', fontWeight: 400, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                   ))}
                 </tr>
@@ -210,11 +210,11 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                     <td style={{ padding: '8px 10px', color: 'var(--muted)', fontSize: 10 }}>{sales.length - idx}</td>
                     <td style={{ padding: '8px 10px', color: 'var(--text)', fontWeight: 500 }}>{s.buyer_name}</td>
                     <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{zoneLabel(s.zone)}</td>
-                    <td style={{ padding: '8px 10px', color: 'var(--muted)', textTransform: 'capitalize' }}>{s.ticket_type === 'group' ? 'Grupo' : 'Individual'}</td>
+                    <td style={{ padding: '8px 10px', color: 'var(--muted)', textTransform: 'capitalize' }}>{s.ticket_type === 'group' ? (lang === 'es' ? 'Grupo' : 'Group') : (lang === 'es' ? 'Individual' : 'Individual')}</td>
                     <td style={{ padding: '8px 10px', color: 'var(--muted)', textAlign: 'center' }}>{s.group_size}</td>
                     <td style={{ padding: '8px 10px' }}>
                       <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: `${PAYMENT_COLORS[s.payment_method]}22`, color: PAYMENT_COLORS[s.payment_method] ?? 'var(--text)', border: `0.5px solid ${PAYMENT_COLORS[s.payment_method] ?? 'var(--border2)'}` }}>
-                        {PAYMENT_LABELS[s.payment_method] ?? s.payment_method}
+                        {payLabel(s.payment_method)}
                       </span>
                     </td>
                     <td style={{ padding: '8px 10px', color: s.total_amount === 0 ? 'var(--muted)' : 'var(--text)', fontWeight: 500 }}>
@@ -232,7 +232,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: '0.5px solid var(--border2)' }}>
-                  <td colSpan={6} style={{ padding: '10px 10px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--green)', fontWeight: 600 }}>Total cobrado</td>
+                  <td colSpan={6} style={{ padding: '10px 10px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--green)', fontWeight: 600 }}>{tr('total_collected')}</td>
                   <td style={{ padding: '10px 10px', fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{money(totalCollected)}</td>
                   <td colSpan={2} />
                 </tr>
@@ -252,8 +252,8 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', ...mono, letterSpacing: '-0.3px' }}>Nueva Venta</h3>
-                <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginTop: 2 }}>Registrar ticket(s)</p>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', ...mono, letterSpacing: '-0.3px' }}>{tr('modal_title')}</h3>
+                <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginTop: 2 }}>{tr('modal_sub')}</p>
               </div>
               <button onClick={closeModal} style={{ background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--muted)', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>×</button>
             </div>
@@ -262,10 +262,10 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
               {/* Buyer Name */}
               <div>
-                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Nombre del comprador</label>
+                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>{tr('buyer_name')}</label>
                 <input
                   type="text"
-                  placeholder="Ej: Juan Pérez…"
+                  placeholder={tr('name_ph')}
                   value={buyerName}
                   onChange={e => setBuyerName(e.target.value)}
                   autoFocus
@@ -276,7 +276,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
               {/* Quantity */}
               <div>
                 <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
-                  Cantidad de tickets
+                  {tr('ticket_qty_label')}
                 </label>
                 {/* Quick preset buttons */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
@@ -315,14 +315,14 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                 </div>
                 {qty > 1 && (
                   <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 6 }}>
-                    {qty} tickets · se registran como una compra grupal
+                    {qty} {tr('group_note')}
                   </p>
                 )}
               </div>
 
               {/* Zone */}
               <div>
-                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Localidad</label>
+                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>{tr('zone_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {ZONES.map(z => (
                     <button
@@ -336,7 +336,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                         ...mono, fontSize: 12,
                       }}
                     >
-                      <div style={{ fontWeight: 600 }}>{z.label}</div>
+                      <div style={{ fontWeight: 600 }}>{tr(z.zoneKey)}</div>
                       <div style={{ fontSize: 10, marginTop: 2, color: zone === z.key ? 'var(--accent2)' : 'var(--muted)', opacity: 0.8 }}>
                         {money(cfg[z.priceKey])}
                       </div>
@@ -347,9 +347,9 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
               {/* Payment method */}
               <div>
-                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Método de pago</label>
+                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>{tr('method_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {PAYMENT_METHODS.map(p => (
+                  {PAYMENT_KEYS.map(p => (
                     <button
                       key={p.key}
                       onClick={() => { setPaymentMethod(p.key); setCustomPrice(''); }}
@@ -361,8 +361,8 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
                         ...mono, fontSize: 12, fontWeight: paymentMethod === p.key ? 600 : 400,
                       }}
                     >
-                      {p.label}
-                      {p.free && <div style={{ fontSize: 9, marginTop: 2, opacity: 0.7 }}>valor = 0</div>}
+                      {tr(p.payKey)}
+                      {p.free && <div style={{ fontSize: 9, marginTop: 2, opacity: 0.7 }}>{tr('free_note')}</div>}
                     </button>
                   ))}
                 </div>
@@ -372,7 +372,7 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
               {!isFree && (
                 <div>
                   <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>
-                    Precio unitario ({sym}) — editable
+                    {tr('unit_price_label')} ({sym}) — {tr('editable')}
                   </label>
                   <input
                     type="number"
@@ -387,49 +387,49 @@ export default function SalesSheet({ eventId, cfg, money, fromCurrent, toCurrent
 
               {/* Notes */}
               <div>
-                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Notas (opcional)</label>
-                <input type="text" placeholder="Ej: Pago en 2 partes, asiento especial…" value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%', ...mono }} />
+                <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>{tr('notes_label')}</label>
+                <input type="text" placeholder={tr('notes_ph')} value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%', ...mono }} />
               </div>
 
               {/* Summary */}
               <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '14px 16px', border: '0.5px solid var(--border2)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>Zona</span>
-                  <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{selectedZone.label}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('col_zone2')}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{tr(selectedZone.zoneKey)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>Cantidad</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('col_qty2')}</span>
                   <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{qty}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>Precio c/u</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('col_unit')}</span>
                   <span style={{ fontSize: 12, color: 'var(--text)', ...mono, fontWeight: 500 }}>{isFree ? '—' : `${sym}${unitPriceDisplay.toLocaleString()}`}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '0.5px solid var(--border2)', paddingTop: 8, marginTop: 4 }}>
-                  <span style={{ fontSize: 12, color: 'var(--muted)', ...mono, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)', ...mono, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tr('total_label')}</span>
                   <span style={{ fontSize: 20, color: isFree ? 'var(--muted)' : 'var(--green)', ...mono, fontWeight: 700 }}>
                     {isFree ? sym + '0' : `${sym}${totalDisplay.toLocaleString()}`}
                   </span>
                 </div>
                 {selectedPayment.key === 'por_pagar' && (
-                  <p style={{ fontSize: 10, color: '#fbbf24', ...mono, marginTop: 6 }}>⚠ Pago pendiente — no se registra como ingreso cobrado</p>
+                  <p style={{ fontSize: 10, color: '#fbbf24', ...mono, marginTop: 6 }}>{tr('pending_note')}</p>
                 )}
                 {selectedPayment.key === 'special' && (
-                  <p style={{ fontSize: 10, color: '#c084fc', ...mono, marginTop: 6 }}>★ Ticket especial / cortesía — ingreso = 0</p>
+                  <p style={{ fontSize: 10, color: '#c084fc', ...mono, marginTop: 6 }}>{tr('special_note')}</p>
                 )}
               </div>
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={closeModal} style={{ flex: 1, padding: '12px 0', borderRadius: 8, background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--muted)', ...mono, fontSize: 13, cursor: 'pointer' }}>
-                  Cancelar
+                  {tr('cancel')}
                 </button>
                 <button
                   onClick={confirmSale}
                   disabled={saving || !buyerName.trim()}
                   style={{ flex: 2, padding: '12px 0', borderRadius: 8, background: 'var(--accent)', border: 'none', color: '#fff', ...mono, fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: (saving || !buyerName.trim()) ? 0.5 : 1 }}
                 >
-                  {saving ? 'Guardando…' : '✓ Confirmar venta'}
+                  {saving ? tr('saving_sale') : tr('confirm_sale')}
                 </button>
               </div>
             </div>
