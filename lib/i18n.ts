@@ -97,6 +97,7 @@ const translations = {
     // P&L Matrix
     matrix_title: 'Matriz P&L — General × Lounge individual',
     vip_fixed: 'VIP fijo en',
+    matrix_frozen_note: 'congelada — excluida del cálculo',
 
     // Sales sheet
     sales_title: 'Hoja de Ventas',
@@ -300,6 +301,7 @@ const translations = {
     // P&L Matrix
     matrix_title: 'P&L Matrix — General × Lounge individual',
     vip_fixed: 'VIP fixed at',
+    matrix_frozen_note: 'frozen — excluded from calculation',
 
     // Sales sheet
     sales_title: 'Sales Sheet',

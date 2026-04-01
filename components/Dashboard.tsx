@@ -806,42 +806,74 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </section>
 
         {/* P&L Matrix */}
-        <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
-          <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{tr('matrix_title')}</h2>
-          <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginBottom: 16 }}>{tr('vip_fixed')} {cfg.cap_vip}</p>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 11, width: '100%' }}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center' }}>G \ L</th>
-                  {LOUNGE_STEPS.map(l => (
-                    <th key={l} style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 400 }}>{l} L</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {GENE_STEPS.map(g => (
-                  <tr key={g}>
-                    <td style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 500 }}>{g} G</td>
-                    {LOUNGE_STEPS.map(l => {
-                      const r2 = g * cfg.price_gen + cfg.cap_vip * cfg.price_vip + l * cfg.price_lounge_ind;
-                      const p  = r2 - costNeto;
-                      const isOpt = g === cfg.cap_gen && l === cfg.cap_lounge;
-                      let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';
-                      if (p >= 0)       { bg = 'rgba(52,211,153,0.12)'; clr = '#34d399'; }
-                      else if (p >= -150000) { bg = 'rgba(251,191,36,0.12)'; clr = '#fbbf24'; }
-                      return (
-                        <td key={l} style={{ padding: '6px 12px', border: '0.5px solid var(--border)', background: isOpt ? 'rgba(124,109,250,0.2)' : bg, color: isOpt ? 'var(--accent2)' : clr, textAlign: 'center', fontWeight: isOpt ? 600 : 400, outline: isOpt ? '1.5px solid var(--accent)' : 'none', outlineOffset: '-1px' }}>
-                          {money(p, true)}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        {(() => {
+          const isVIPFrozen      = frozenDefaultZones.includes('vip');
+          const isGenFrozen      = frozenDefaultZones.includes('general');
+          const isLoungeIndFrozen = frozenDefaultZones.includes('lounge_ind');
+          const activeGeneSteps   = isGenFrozen      ? [0] : GENE_STEPS;
+          const activeLoungeSteps = isLoungeIndFrozen ? [0] : LOUNGE_STEPS;
+          const vipContrib = isVIPFrozen ? 0 : cfg.cap_vip * cfg.price_vip;
+          const optG = isGenFrozen      ? 0 : cfg.cap_gen;
+          const optL = isLoungeIndFrozen ? 0 : cfg.cap_lounge;
+          const rowLabel = `${isGenFrozen ? '0' : 'G'} \\ ${isLoungeIndFrozen ? '0' : 'L'}`;
+          return (
+            <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
+              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{tr('matrix_title')}</h2>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+                {!isVIPFrozen && (
+                  <p style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{tr('vip_fixed')} {cfg.cap_vip}</p>
+                )}
+                {isVIPFrozen && (
+                  <span style={{ fontSize: 10, ...mono, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 8px' }}>
+                    VIP {tr('matrix_frozen_note')}
+                  </span>
+                )}
+                {isGenFrozen && (
+                  <span style={{ fontSize: 10, ...mono, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 8px' }}>
+                    {tr('lbl_gen')} {tr('matrix_frozen_note')}
+                  </span>
+                )}
+                {isLoungeIndFrozen && (
+                  <span style={{ fontSize: 10, ...mono, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 8px' }}>
+                    {tr('lbl_lounge_ind')} {tr('matrix_frozen_note')}
+                  </span>
+                )}
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 11, width: '100%' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center' }}>{rowLabel}</th>
+                      {activeLoungeSteps.map(l => (
+                        <th key={l} style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 400 }}>{l} L</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeGeneSteps.map(g => (
+                      <tr key={g}>
+                        <td style={{ padding: '6px 12px', background: 'var(--bg3)', color: 'var(--muted)', border: '0.5px solid var(--border)', textAlign: 'center', fontWeight: 500 }}>{g} G</td>
+                        {activeLoungeSteps.map(l => {
+                          const r2 = g * cfg.price_gen + vipContrib + l * cfg.price_lounge_ind;
+                          const p  = r2 - costNeto;
+                          const isOpt = g === optG && l === optL;
+                          let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';
+                          if (p >= 0)            { bg = 'rgba(52,211,153,0.12)';  clr = '#34d399'; }
+                          else if (p >= -150000) { bg = 'rgba(251,191,36,0.12)';  clr = '#fbbf24'; }
+                          return (
+                            <td key={l} style={{ padding: '6px 12px', border: '0.5px solid var(--border)', background: isOpt ? 'rgba(124,109,250,0.2)' : bg, color: isOpt ? 'var(--accent2)' : clr, textAlign: 'center', fontWeight: isOpt ? 600 : 400, outline: isOpt ? '1.5px solid var(--accent)' : 'none', outlineOffset: '-1px' }}>
+                              {money(p, true)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          );
+        })()}
 
       </div>
     </div>
