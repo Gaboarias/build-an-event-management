@@ -204,7 +204,7 @@ const translations = {
     theme_light:       'Claro',
     theme_colorblind:  'Accesible',
 
-    home_subtitle: 'Wrestling Events Manager',
+    home_subtitle: 'Wrestling Event Manager',
     section_events: 'Eventos',
     section_seminars: 'Seminarios',
     create_event: '+ Crear evento',
@@ -423,7 +423,7 @@ const translations = {
     theme_light:       'Light',
     theme_colorblind:  'Accessible',
 
-    home_subtitle: 'Wrestling Events Manager',
+    home_subtitle: 'Wrestling Event Manager',
     section_events: 'Events',
     section_seminars: 'Seminars',
     create_event: '+ Create event',

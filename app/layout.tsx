@@ -3,7 +3,7 @@ import './globals.css';
 import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'WEM — Wrestling Events Manager',
+  title: 'WEM — Wrestling Event Manager',
   description: 'Gestión financiera de eventos de wrestling',
 };
 
