@@ -125,7 +125,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const costNeto = expenses.reduce((s, e) => s + e.amount, 0);
   const rev  = calcRev(gen, vip, li, lm, cfg);
   const pl   = rev - costNeto;
-  const pers = type === 'seminar' ? gen : gen + vip + li + lm * 3;
+  const pers = type === 'seminar' ? gen + vip : gen + vip + li + lm * 3;
   const pct  = costNeto > 0 ? Math.min((rev / costNeto) * 100, 100) : 0;
 
   const plColor  = pl > 5000 ? 'var(--green)' : pl >= -20000 ? 'var(--amber)' : 'var(--red)';
@@ -374,7 +374,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
                 <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{tr('capacity_title')}</p>
                 <div style={{ display: 'grid', gap: 12 }}>
                   {(type === 'seminar'
-                    ? [{ key: 'cap_gen' as const, label: tr('cap_seminar') }]
+                    ? [
+                        { key: 'cap_gen' as const, label: tr('cap_seminar') },
+                        { key: 'cap_vip' as const, label: tr('cap_external_wrestlers') },
+                      ]
                     : [
                         { key: 'cap_gen'    as const, label: tr('cap_gen') },
                         { key: 'cap_vip'    as const, label: tr('cap_vip') },
@@ -608,13 +611,22 @@ export default function Dashboard({ initialConfig, type }: Props) {
             </h2>
             <div style={{ display: 'grid', gap: 12 }}>
               {type === 'seminar' ? (
-                <div>
-                  <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{tr('price_seminar_fee')} ({sym})</label>
-                  <input type="number" value={draftDisplay.price_gen}
-                    onChange={e => setDraft(d => ({ ...d, price_gen: Math.round(fromCurrent(+e.target.value)) }))}
-                    step={currency === 'CRC' ? 500 : 1} min={0} />
-                  <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{tr('max')} {draft.cap_gen} {tr('people')}</p>
-                </div>
+                <>
+                  <div>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{tr('price_seminar_fee')} ({sym})</label>
+                    <input type="number" value={draftDisplay.price_gen}
+                      onChange={e => setDraft(d => ({ ...d, price_gen: Math.round(fromCurrent(+e.target.value)) }))}
+                      step={currency === 'CRC' ? 500 : 1} min={0} />
+                    <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{tr('max')} {draft.cap_gen} {tr('people')}</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', ...mono, display: 'block', marginBottom: 4 }}>{tr('price_external_fee')} ({sym})</label>
+                    <input type="number" value={draftDisplay.price_vip}
+                      onChange={e => setDraft(d => ({ ...d, price_vip: Math.round(fromCurrent(+e.target.value)) }))}
+                      step={currency === 'CRC' ? 500 : 1} min={0} />
+                    <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, marginTop: 3 }}>{tr('max')} {draft.cap_vip} {tr('lbl_external_wrestlers').toLowerCase()}</p>
+                  </div>
+                </>
               ) : (
                 ([
                   { key: 'price_gen',         zoneKey: 'general',     label: `${tr('lbl_gen')} (${sym})`,            note: `${tr('max')} ${draft.cap_gen} ${tr('people')}` },
@@ -643,7 +655,10 @@ export default function Dashboard({ initialConfig, type }: Props) {
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('simulator_title')}</h2>
             <div style={{ display: 'grid', gap: 14 }}>
               {(type === 'seminar'
-                ? [{ zoneKey: 'general', label: tr('lbl_attendees'), val: gen, set: setGen, max: cfg.cap_gen, bigStep: 5 }]
+                ? [
+                    { zoneKey: 'general', label: tr('lbl_attendees'),          val: gen, set: setGen, max: cfg.cap_gen, bigStep: 5 },
+                    { zoneKey: 'vip',     label: tr('lbl_external_wrestlers'),  val: vip, set: setVip, max: cfg.cap_vip, bigStep: 1 },
+                  ]
                 : ([
                     { zoneKey: 'general',     label: tr('lbl_gen'),        val: gen, set: setGen, max: cfg.cap_gen,    bigStep: 5 },
                     { zoneKey: 'vip',         label: tr('lbl_vip'),        val: vip, set: setVip, max: cfg.cap_vip,    bigStep: 5 },
@@ -824,9 +839,14 @@ export default function Dashboard({ initialConfig, type }: Props) {
         {/* P&L Matrix / Seminar Projection */}
         {type === 'seminar' ? (() => {
           const fillSteps = [0.10, 0.25, 0.50, 0.60, 0.75, 0.90, 1.00];
+          const extRevFixed = vip * cfg.price_vip;
           return (
             <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
-              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>{tr('matrix_seminar_title')}</h2>
+              <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{tr('matrix_seminar_title')}</h2>
+              <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginBottom: 16 }}>
+                {tr('lbl_external_wrestlers')}: <strong style={{ color: 'var(--text)' }}>{vip}</strong>
+                {vip > 0 && <span style={{ marginLeft: 8, color: 'var(--accent2)' }}>+{money(extRevFixed)}</span>}
+              </p>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ borderCollapse: 'collapse', ...mono, fontSize: 12, width: '100%' }}>
                   <thead>
@@ -839,7 +859,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                   <tbody>
                     {fillSteps.map(pct2 => {
                       const att = Math.round(cfg.cap_gen * pct2);
-                      const r2  = att * cfg.price_gen;
+                      const r2  = att * cfg.price_gen + extRevFixed;
                       const p   = r2 - costNeto;
                       const isCurrent = att === gen;
                       let bg = 'rgba(248,113,113,0.12)'; let clr = '#f87171';

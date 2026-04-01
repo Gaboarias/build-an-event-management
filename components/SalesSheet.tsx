@@ -47,7 +47,10 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
   })();
 
   const allZones = type === 'seminar'
-    ? [{ value: 'general', label: tr('lbl_attendees'), price: cfg.price_gen, isCustom: false }]
+    ? [
+        { value: 'general', label: tr('lbl_attendees'),         price: cfg.price_gen, isCustom: false },
+        { value: 'vip',     label: tr('lbl_external_wrestlers'), price: cfg.price_vip, isCustom: false },
+      ]
     : [
         ...ZONES
           .filter(z => !frozenDefaultKeys.includes(z.key))

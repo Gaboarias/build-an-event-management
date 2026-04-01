@@ -105,6 +105,10 @@ const translations = {
     lbl_attendees: 'Asistentes',
     matrix_seminar_title: 'Proyección por asistencia',
     seminar_fill_rate: 'Ocupación',
+    price_external_fee: 'Tarifa Luchador Externo',
+    cap_external_wrestlers: 'Máx. luchadores externos',
+    lbl_external_wrestlers: 'Luchadores Externos',
+    seminar_ext_fixed: 'luchadores externos fijos en',
 
     // Sales sheet
     sales_title: 'Hoja de Ventas',
@@ -316,6 +320,10 @@ const translations = {
     lbl_attendees: 'Attendees',
     matrix_seminar_title: 'Attendance Projection',
     seminar_fill_rate: 'Fill rate',
+    price_external_fee: 'External Wrestler Fee',
+    cap_external_wrestlers: 'Max external wrestlers',
+    lbl_external_wrestlers: 'External Wrestlers',
+    seminar_ext_fixed: 'external wrestlers fixed at',
 
     // Sales sheet
     sales_title: 'Sales Sheet',
