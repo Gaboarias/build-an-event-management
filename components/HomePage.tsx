@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { EventListItem, EventType } from '@/lib/db';
 import { type Lang, makeTr, getLang, setLang } from '@/lib/i18n';
 import { useTheme, type Theme } from './ThemeProvider';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 interface Props {
   events: EventListItem[];
@@ -109,6 +110,7 @@ function Calendar({ allItems, lang }: { allItems: EventListItem[]; lang: Lang })
   const mono = { fontFamily: 'var(--font-mono)' };
 
   const [calDate, setCalDate] = useState(() => { const d = new Date(); d.setDate(1); return d; });
+  const isMobile = useIsMobile();
 
   const year  = calDate.getFullYear();
   const month = calDate.getMonth();
@@ -154,13 +156,13 @@ function Calendar({ allItems, lang }: { allItems: EventListItem[]; lang: Lang })
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setCalDate(new Date(year, month - 1, 1))}
             style={{ background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 10px', fontSize: 14, cursor: 'pointer' }}>‹</button>
-          <span style={{ ...mono, fontSize: 12, color: 'var(--text)', fontWeight: 600, textTransform: 'capitalize', minWidth: 140, textAlign: 'center' }}>{monthLabel}</span>
+          <span style={{ ...mono, fontSize: 12, color: 'var(--text)', fontWeight: 600, textTransform: 'capitalize', minWidth: isMobile ? 90 : 140, textAlign: 'center' }}>{monthLabel}</span>
           <button onClick={() => setCalDate(new Date(year, month + 1, 1))}
             style={{ background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 10px', fontSize: 14, cursor: 'pointer' }}>›</button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 280px', gap: 24 }}>
         {/* Grid */}
         <div>
           {/* Day-of-week headers */}
@@ -280,6 +282,7 @@ export default function HomePage({ events, seminars }: Props) {
 
   const tr = makeTr(lang);
   const mono = { fontFamily: 'var(--font-mono)' };
+  const isMobile = useIsMobile();
 
   function toggleLang() {
     const next: Lang = lang === 'es' ? 'en' : 'es';
@@ -295,12 +298,12 @@ export default function HomePage({ events, seminars }: Props) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <header style={{ borderBottom: '0.5px solid var(--border)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header style={{ borderBottom: '0.5px solid var(--border)', padding: isMobile ? '14px 16px' : '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: isMobile ? 18 : 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
           <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginTop: 2 }}>{tr('home_subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {/* Theme switcher */}
           <div style={{ display: 'flex', gap: 4, background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 8, padding: 3 }}>
             {themes.map(t => (
@@ -317,8 +320,8 @@ export default function HomePage({ events, seminars }: Props) {
         </div>
       </header>
 
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '40px 24px', display: 'grid', gap: 32 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
+      <div style={{ maxWidth: 980, margin: '0 auto', padding: isMobile ? '24px 16px' : '40px 24px', display: 'grid', gap: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 40 }}>
           <Section title={tr('section_events')} items={events} type="event" buttonLabel={tr('create_event')} noItemsLabel={tr('no_events')} lang={lang} />
           <Section title={tr('section_seminars')} items={seminars} type="seminar" buttonLabel={tr('create_seminar')} noItemsLabel={tr('no_seminars')} lang={lang} />
         </div>

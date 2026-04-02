@@ -7,6 +7,7 @@ import type { EventConfig, EventType, SalesSnapshot, Expense, EventZone } from '
 import SalesSheet from './SalesSheet';
 import { type Lang, makeTr, getLang, setLang } from '@/lib/i18n';
 import { useTheme, type Theme } from './ThemeProvider';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 interface Props {
   initialConfig: EventConfig;
@@ -86,6 +87,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
   const [lang, setLangState] = useState<Lang>('es');
 
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -343,7 +345,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
 
       {/* Header */}
-      <header style={{ borderBottom: '0.5px solid var(--border)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header style={{ borderBottom: '0.5px solid var(--border)', padding: isMobile ? '14px 16px' : '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
             <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
@@ -355,7 +357,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
             {cfg.status === 'cancelled' && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(248,113,113,0.15)', color: 'var(--red)', border: '0.5px solid var(--red)', ...mono, fontWeight: 600 }}>{tr('status_cancelled')}</span>}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {/* Theme switcher */}
           <div style={{ display: 'flex', gap: 4, background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 8, padding: 3 }}>
             {themes.map(t => (
@@ -379,13 +381,13 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
       </header>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px', display: 'grid', gap: 24 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '20px 16px' : '32px 24px', display: 'grid', gap: 24 }}>
 
         {/* Settings Panel */}
         {showSettings && (
           <section style={{ background: 'var(--bg2)', border: '1px solid var(--accent)', borderRadius: 12, padding: 20 }}>
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>{tr('settings_title')}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24 }}>
 
               {/* Capacity */}
               <div>
@@ -500,7 +502,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
                   ))}
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr auto', gap: 8 }}>
                 <input type="text" placeholder={tr('zone_name_ph')} value={newZoneName} onChange={e => setNewZoneName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addZone()} />
                 <input type="number" placeholder={tr('zone_capacity')} value={newZoneCap} onChange={e => setNewZoneCap(e.target.value)} min={0} step={1} />
                 <input type="number" placeholder={`${tr('zone_price')} (${sym})`} value={newZonePrice} onChange={e => setNewZonePrice(e.target.value)} min={0} step={currency === 'CRC' ? 500 : 1} />
@@ -557,7 +559,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
         )}
 
         {/* Event Info Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12 }}>
           {([
             { field: 'event_name'  as const, label: tr('info_event_name'), value: cfg.event_name,  display: cfg.event_name,  type: 'text',   ph: cfg.event_name },
             { field: 'venue'       as const, label: tr('info_venue'),      value: cfg.venue ?? '',  display: cfg.venue,       type: 'text',   ph: tr('info_venue_ph') },
@@ -589,7 +591,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
         </div>
 
         {/* KPI Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: 12 }}>
           {[
             { label: tr('kpi_expenses'),   value: money(costNeto),         color: 'var(--accent2)' },
             { label: tr('kpi_revenue'),    value: money(rev),              color: 'var(--text)' },
@@ -617,7 +619,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24 }}>
 
           {/* Price config */}
           <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
@@ -716,7 +718,7 @@ export default function Dashboard({ initialConfig, type }: Props) {
           <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
             {tr('expenses_title')} {loadingExp && <span>…</span>}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: newExpCat === '__new__' ? '1fr 1fr 1fr 1fr auto' : '1fr 2fr 1fr auto', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : (newExpCat === '__new__' ? '1fr 1fr 1fr 1fr auto' : '1fr 2fr 1fr auto'), gap: 8, marginBottom: 16 }}>
             <select value={newExpCat} onChange={e => { setNewExpCat(e.target.value); setNewExpCustomCat(''); }}
               style={{ background: 'var(--bg3)', border: '0.5px solid var(--border2)', color: 'var(--text)', ...mono, fontSize: 13, borderRadius: 6, padding: '8px 12px' }}>
               {EXPENSE_CATEGORIES.map(c => (

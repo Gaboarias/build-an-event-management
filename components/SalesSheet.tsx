@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { EventConfig, EventType, TicketSale, EventZone } from '@/lib/db';
 import { type Lang, makeTr } from '@/lib/i18n';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 interface Props {
   eventId: number;
@@ -147,6 +148,7 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
   useEffect(() => { onCollectedChange?.(totalCollected); }, [totalCollected, onCollectedChange]);
 
   const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)' };
+  const isMobile = useIsMobile();
   const zoneLabel = (k: string) => { const z = ZONES.find(z => z.key === k); return z ? tr(z.zoneKey) : k; };
   const payLabel  = (k: string) => { const p = PAYMENT_KEYS.find(p => p.key === k); return p ? tr(p.payKey) : k; };
 
@@ -154,12 +156,12 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
     <>
       <section style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: 20 }}>
         {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ fontSize: 11, ...mono, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               {tr('sales_title')} {loading && <span>…</span>}
             </h2>
-            <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, ...mono, color: 'var(--green)' }}>{tr('collected')}: {money(totalCollected)}</span>
               {totalPending > 0 && <span style={{ fontSize: 12, ...mono, color: '#fbbf24' }}>{tr('pending_label')}: {money(totalPending)}</span>}
               <span style={{ fontSize: 12, ...mono, color: 'var(--muted)' }}>{totalTickets} {totalTickets !== 1 ? tr('tickets_plural') : tr('tickets_label')}</span>
@@ -174,14 +176,14 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
         </div>
 
         {/* Quick-add row (inline) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr auto', gap: 8, marginBottom: 16, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1.5fr 1.5fr auto', gap: 8, marginBottom: 16, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 8, border: '0.5px solid var(--border2)' }}>
           <input
             type="text"
             placeholder={tr('name_ph')}
             value={buyerName}
             onChange={e => setBuyerName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && openModal()}
-            style={{ ...mono }}
+            style={{ ...mono, gridColumn: isMobile ? '1 / -1' : undefined }}
           />
           <select
             value={zone}
@@ -208,7 +210,7 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
                 openModal();
               }
             }}
-            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 16px', ...mono, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: isMobile ? '10px 0' : '0 16px', ...mono, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', gridColumn: isMobile ? '1 / -1' : undefined }}
           >
             {tr('register_btn')}
           </button>
@@ -269,10 +271,10 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
       {/* ─── PREBUY MODAL ─── */}
       {showModal && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}
         >
-          <div style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 16, width: '100%', maxWidth: 480, padding: 28, boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: isMobile ? '16px 16px 0 0' : 16, width: '100%', maxWidth: isMobile ? '100%' : 480, padding: isMobile ? '24px 20px' : 28, boxShadow: '0 24px 80px rgba(0,0,0,0.5)', maxHeight: isMobile ? '92vh' : '90vh', overflowY: 'auto' }}>
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
