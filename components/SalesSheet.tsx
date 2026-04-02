@@ -169,7 +169,7 @@ export default function SalesSheet({ eventId, cfg, type, money, fromCurrent, toC
           </div>
           <button
             onClick={openModal}
-            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', ...mono, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', ...mono, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : undefined }}
           >
             {tr('new_sale')}
           </button>

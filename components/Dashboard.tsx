@@ -348,11 +348,11 @@ export default function Dashboard({ initialConfig, type }: Props) {
       <header style={{ borderBottom: '0.5px solid var(--border)', padding: isMobile ? '14px 16px' : '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: isMobile ? 18 : 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
             <Link href="/" style={{ fontSize: 11, color: 'var(--muted)', ...mono, textDecoration: 'none' }}>{tr('back_home')}</Link>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-            <p style={{ fontSize: 11, color: 'var(--muted)', ...mono }}>{cfg.event_name} · {typeLabel}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 180 : undefined, whiteSpace: isMobile ? 'nowrap' : undefined }}>{cfg.event_name} · {typeLabel}</p>
             {cfg.status === 'paused'    && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '0.5px solid #fbbf24', ...mono, fontWeight: 600 }}>{tr('status_paused')}</span>}
             {cfg.status === 'cancelled' && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(248,113,113,0.15)', color: 'var(--red)', border: '0.5px solid var(--red)', ...mono, fontWeight: 600 }}>{tr('status_cancelled')}</span>}
           </div>
@@ -485,19 +485,21 @@ export default function Dashboard({ initialConfig, type }: Props) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                   {customZones.map(z => (
-                    <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: z.frozen ? 'rgba(248,113,113,0.07)' : 'var(--bg3)', borderRadius: 8, border: `0.5px solid ${z.frozen ? 'rgba(248,113,113,0.3)' : 'var(--border2)'}`, opacity: z.frozen ? 0.75 : 1 }}>
-                      <span style={{ flex: 1, ...mono, fontSize: 13, color: z.frozen ? 'var(--muted)' : 'var(--text)', fontWeight: 600, textDecoration: z.frozen ? 'line-through' : 'none' }}>{z.name}</span>
+                    <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: z.frozen ? 'rgba(248,113,113,0.07)' : 'var(--bg3)', borderRadius: 8, border: `0.5px solid ${z.frozen ? 'rgba(248,113,113,0.3)' : 'var(--border2)'}`, opacity: z.frozen ? 0.75 : 1, flexWrap: 'wrap' }}>
+                      <span style={{ flex: 1, minWidth: 80, ...mono, fontSize: 13, color: z.frozen ? 'var(--muted)' : 'var(--text)', fontWeight: 600, textDecoration: z.frozen ? 'line-through' : 'none' }}>{z.name}</span>
                       <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_capacity')}: {z.capacity}</span>
                       <span style={{ ...mono, fontSize: 11, color: 'var(--muted)' }}>{tr('zone_price')}: {money(z.price)}</span>
                       {z.frozen && <span style={{ ...mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--red)', background: 'rgba(248,113,113,0.12)', border: '0.5px solid rgba(248,113,113,0.3)', borderRadius: 4, padding: '2px 6px' }}>{tr('zone_frozen')}</span>}
-                      <button onClick={() => toggleCustomZone(z.id, z.frozen)}
-                        style={{ padding: '4px 12px', borderRadius: 6, ...mono, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                          background: z.frozen ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.08)',
-                          border: `0.5px solid ${z.frozen ? 'var(--green)' : 'rgba(248,113,113,0.4)'}`,
-                          color: z.frozen ? 'var(--green)' : 'var(--red)' }}>
-                        {z.frozen ? tr('unfreeze_zone') : tr('freeze_zone')}
-                      </button>
-                      <button onClick={() => deleteZoneRow(z.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
+                      <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                        <button onClick={() => toggleCustomZone(z.id, z.frozen)}
+                          style={{ padding: '4px 10px', borderRadius: 6, ...mono, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                            background: z.frozen ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.08)',
+                            border: `0.5px solid ${z.frozen ? 'var(--green)' : 'rgba(248,113,113,0.4)'}`,
+                            color: z.frozen ? 'var(--green)' : 'var(--red)' }}>
+                          {z.frozen ? tr('unfreeze_zone') : tr('freeze_zone')}
+                        </button>
+                        <button onClick={() => deleteZoneRow(z.id)} style={{ background: 'transparent', color: 'var(--red)', padding: '2px 8px', fontSize: 11, border: '0.5px solid var(--red)', opacity: 0.7, cursor: 'pointer', borderRadius: 4 }}>×</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -593,15 +595,15 @@ export default function Dashboard({ initialConfig, type }: Props) {
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: 12 }}>
           {[
-            { label: tr('kpi_expenses'),   value: money(costNeto),         color: 'var(--accent2)' },
-            { label: tr('kpi_revenue'),    value: money(rev),              color: 'var(--text)' },
-            { label: tr('kpi_actual_rev'), value: money(collectedRevenue), color: collectedRevenue === 0 ? 'var(--muted)' : collectedRevenue >= costNeto ? 'var(--green)' : 'var(--red)' },
-            { label: tr('kpi_pl'),         value: money(pl, true),         color: plColor },
-            { label: tr('kpi_people'),     value: pers.toString(),         color: 'var(--text)' },
+            { label: tr('kpi_expenses'),   value: money(costNeto),         color: 'var(--accent2)', span: false },
+            { label: tr('kpi_revenue'),    value: money(rev),              color: 'var(--text)',     span: false },
+            { label: tr('kpi_actual_rev'), value: money(collectedRevenue), color: collectedRevenue === 0 ? 'var(--muted)' : collectedRevenue >= costNeto ? 'var(--green)' : 'var(--red)', span: false },
+            { label: tr('kpi_pl'),         value: money(pl, true),         color: plColor,           span: false },
+            { label: tr('kpi_people'),     value: pers.toString(),         color: 'var(--text)',     span: true  },
           ].map(k => (
-            <div key={k.label} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+            <div key={k.label} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '14px 16px', gridColumn: isMobile && k.span ? '1 / -1' : undefined }}>
               <p style={{ fontSize: 10, color: 'var(--muted)', ...mono, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{k.label}</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: k.color, ...mono }}>{k.value}</p>
+              <p style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: k.color, ...mono }}>{k.value}</p>
             </div>
           ))}
         </div>
