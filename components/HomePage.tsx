@@ -309,8 +309,10 @@ function Contacts({ lang }: { lang: Lang }) {
 
   async function loadContacts() {
     setLoading(true);
-    try { const r = await fetch('/api/contacts'); setContacts(await r.json()); }
-    finally { setLoading(false); }
+    try {
+      const r = await fetch('/api/contacts');
+      if (r.ok) setContacts(await r.json());
+    } finally { setLoading(false); }
   }
 
   useEffect(() => { loadContacts(); }, []);
