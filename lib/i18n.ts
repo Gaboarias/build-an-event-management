@@ -223,6 +223,20 @@ const translations = {
     updated: 'Actualizado',
     type_badge_event: 'evento',
     type_badge_seminar: 'seminario',
+
+    // Contacts
+    section_contacts:       'Contactos',
+    create_contact:         '+ Agregar contacto',
+    no_contacts:            'No hay contactos guardados aún.',
+    contact_name_ph:        'Nombre completo…',
+    contact_phone_ph:       'Teléfono…',
+    contact_email_ph:       'Correo electrónico…',
+    contact_role_ph:        'Rol (ej: Luchador, Venue, Promotor)…',
+    contact_notes_ph:       'Notas…',
+    contact_save:           'Guardar contacto',
+    contact_saving:         'Guardando…',
+    contact_confirm_delete: '¿Eliminar este contacto?',
+    contact_err_save:       'Error al guardar el contacto.',
   },
   en: {
     // Nav
@@ -446,6 +460,20 @@ const translations = {
     updated: 'Updated',
     type_badge_event: 'event',
     type_badge_seminar: 'seminar',
+
+    // Contacts
+    section_contacts:       'Contacts',
+    create_contact:         '+ Add contact',
+    no_contacts:            'No contacts saved yet.',
+    contact_name_ph:        'Full name…',
+    contact_phone_ph:       'Phone number…',
+    contact_email_ph:       'Email address…',
+    contact_role_ph:        'Role (e.g. Wrestler, Venue, Promoter)…',
+    contact_notes_ph:       'Notes…',
+    contact_save:           'Save contact',
+    contact_saving:         'Saving…',
+    contact_confirm_delete: 'Delete this contact?',
+    contact_err_save:       'Error saving contact.',
   },
 } as const;
 

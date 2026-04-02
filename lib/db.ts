@@ -46,6 +46,46 @@ export interface SalesSnapshot {
   created_at: string;
 }
 
+export interface Contact {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  role: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export async function getContacts(): Promise<Contact[]> {
+  noStore();
+  const { rows } = await sql<Contact>`
+    SELECT * FROM contacts ORDER BY name ASC
+  `;
+  return rows;
+}
+
+export async function createContact(data: Omit<Contact, 'id' | 'created_at'>): Promise<Contact> {
+  const { rows } = await sql<Contact>`
+    INSERT INTO contacts (name, phone, email, role, notes)
+    VALUES (${data.name}, ${data.phone ?? null}, ${data.email ?? null}, ${data.role ?? null}, ${data.notes ?? null})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function updateContact(id: number, data: Omit<Contact, 'id' | 'created_at'>): Promise<Contact> {
+  const { rows } = await sql<Contact>`
+    UPDATE contacts SET name=${data.name}, phone=${data.phone ?? null}, email=${data.email ?? null},
+      role=${data.role ?? null}, notes=${data.notes ?? null}
+    WHERE id=${id} RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteContact(id: number): Promise<void> {
+  await sql`DELETE FROM contacts WHERE id=${id}`;
+}
+
 export async function getAllEvents(): Promise<EventListItem[]> {
   noStore();
   const { rows } = await sql<EventListItem>`
