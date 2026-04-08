@@ -131,9 +131,13 @@ export default function AcademiaPage() {
       {/* Header */}
       <header style={{ borderBottom: '0.5px solid var(--border)', padding: isMobile ? '14px 16px' : '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: isMobile ? 18 : 22, fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--text)' }}>WEM</h1>
-            <Link href="/" style={{ fontSize: 11, color: 'var(--muted)', ...mono, textDecoration: 'none' }}>{tr('back_home')}</Link>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <span style={{ ...mono, fontSize: 12, color: 'var(--muted)', background: 'var(--bg2)', border: '0.5px solid var(--border2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', display: 'inline-block' }}>
+                ← {tr('back_home')}
+              </span>
+            </Link>
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted)', ...mono, marginTop: 2 }}>{tr('academia_title')} · {tr('academia_subtitle')}</p>
         </div>

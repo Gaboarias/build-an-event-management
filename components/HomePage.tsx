@@ -508,6 +508,11 @@ export default function HomePage({ events, seminars }: Props) {
               </button>
             ))}
           </div>
+          <Link href="/academia" style={{ textDecoration: 'none' }}>
+            <button style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 8, padding: '6px 12px', ...mono, fontSize: 12, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              🥋 {tr('section_academia')}
+            </button>
+          </Link>
           <button onClick={toggleLang} style={{ background: 'var(--bg2)', border: '0.5px solid var(--border2)', color: 'var(--muted)', borderRadius: 8, padding: '6px 12px', ...mono, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
             {tr('lang_toggle')}
           </button>
