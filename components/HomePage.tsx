@@ -521,6 +521,21 @@ export default function HomePage({ events, seminars }: Props) {
           <Section title={tr('section_seminars')} items={seminars} type="seminar" buttonLabel={tr('create_seminar')} noItemsLabel={tr('no_seminars')} lang={lang} />
         </div>
         <Calendar allItems={[...events, ...seminars]} lang={lang} />
+
+        {/* Academia entry card */}
+        <Link href="/academia" style={{ textDecoration: 'none' }}>
+          <div style={{ background: 'var(--bg2)', border: '0.5px solid var(--border)', borderRadius: 12, padding: '20px 24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, transition: 'border-color 0.15s, background 0.15s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLDivElement).style.background = 'var(--bg3)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLDivElement).style.background = 'var(--bg2)'; }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{tr('section_academia')}</p>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{tr('academia_card_desc')} →</p>
+            </div>
+            <span style={{ fontSize: 28, flexShrink: 0 }}>🥋</span>
+          </div>
+        </Link>
+
         <Contacts lang={lang} />
       </div>
     </div>

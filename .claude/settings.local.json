@@ -27,7 +27,27 @@
       "Bash(ls /c/Users/GabrielAriasMesen/AppData/Roaming/npm/vercel*)",
       "Read(//c/Users/GabrielAriasMesen/**)",
       "Bash(/c/Users/GabrielAriasMesen/AppData/Roaming/npm-global/vercel.cmd deploy:*)",
-      "Bash(/c/Users/GabrielAriasMesen/AppData/Local/npm-cache/_npx/69f9afb961c37556/node_modules/.bin/vercel.cmd deploy:*)"
+      "Bash(/c/Users/GabrielAriasMesen/AppData/Local/npm-cache/_npx/69f9afb961c37556/node_modules/.bin/vercel.cmd deploy:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Read(//mnt/c/Users/GabrielAriasMesen/Downloads/**)",
+      "Bash(npm run:*)",
+      "Bash(where vercel:*)",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble && vercel deploy --prod 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble && vercel deploy --prod\")",
+      "Bash(cmd /c \"where vercel\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble && npx vercel deploy --prod --yes 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble && git add -A && git status 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble && git status\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble''; git status\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble''; git add app/layout.tsx components/Dashboard.tsx components/HomePage.tsx components/SalesSheet.tsx lib/useIsMobile.ts; git commit -m ''feat: mobile-responsive layout for iPhone:*)",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble''; git push origin main 2>&1\")",
+      "mcp__a5715786-7d4c-457a-a0da-e74d178463dd__list_projects",
+      "mcp__a5715786-7d4c-457a-a0da-e74d178463dd__execute_sql",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\GabrielAriasMesen\\\\Downloads\\\\midnight-trouble''; git add lib/db-init.js lib/db.ts lib/i18n.ts app/api/contacts/route.ts components/HomePage.tsx; git commit -m ''feat: date sort on event/seminar cards + Contacts section:*)",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__list_projects",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__list_teams",
+      "mcp__f0654be7-aff1-4d34-9b99-3b282a19e4c5__get_deployment"
     ]
   }
 }

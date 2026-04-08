@@ -86,6 +86,50 @@ export async function deleteContact(id: number): Promise<void> {
   await sql`DELETE FROM contacts WHERE id=${id}`;
 }
 
+export interface AcademiaStudent {
+  id: number;
+  name: string;
+  phone: string | null;
+  plan: 'Basic' | 'Mid' | 'Full';
+  date_of_birth: string | null;
+  paid_months: string; // JSON array of "YYYY-MM" strings
+  created_at: string;
+}
+
+export async function getStudents(): Promise<AcademiaStudent[]> {
+  noStore();
+  const { rows } = await sql<AcademiaStudent>`
+    SELECT * FROM academia_students ORDER BY name ASC
+  `;
+  return rows;
+}
+
+export async function createStudent(data: Omit<AcademiaStudent, 'id' | 'created_at'>): Promise<AcademiaStudent> {
+  const { rows } = await sql<AcademiaStudent>`
+    INSERT INTO academia_students (name, phone, plan, date_of_birth, paid_months)
+    VALUES (${data.name}, ${data.phone ?? null}, ${data.plan}, ${data.date_of_birth ?? null}, ${data.paid_months})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function updateStudent(id: number, data: Partial<Omit<AcademiaStudent, 'id' | 'created_at'>>): Promise<AcademiaStudent> {
+  const { rows } = await sql<AcademiaStudent>`
+    UPDATE academia_students
+    SET name=${data.name ?? sql`name`},
+        phone=${data.phone ?? null},
+        plan=${data.plan ?? sql`plan`},
+        date_of_birth=${data.date_of_birth ?? null},
+        paid_months=${data.paid_months ?? sql`paid_months`}
+    WHERE id=${id} RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deleteStudent(id: number): Promise<void> {
+  await sql`DELETE FROM academia_students WHERE id=${id}`;
+}
+
 export async function getAllEvents(): Promise<EventListItem[]> {
   noStore();
   const { rows } = await sql<EventListItem>`
