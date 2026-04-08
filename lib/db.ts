@@ -116,11 +116,11 @@ export async function createStudent(data: Omit<AcademiaStudent, 'id' | 'created_
 export async function updateStudent(id: number, data: Partial<Omit<AcademiaStudent, 'id' | 'created_at'>>): Promise<AcademiaStudent> {
   const { rows } = await sql<AcademiaStudent>`
     UPDATE academia_students
-    SET name=${data.name ?? sql`name`},
+    SET name=${data.name ?? ''},
         phone=${data.phone ?? null},
-        plan=${data.plan ?? sql`plan`},
+        plan=${data.plan ?? 'Basic'},
         date_of_birth=${data.date_of_birth ?? null},
-        paid_months=${data.paid_months ?? sql`paid_months`}
+        paid_months=${data.paid_months ?? '[]'}
     WHERE id=${id} RETURNING *
   `;
   return rows[0];
