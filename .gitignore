@@ -7,3 +7,8 @@ node_modules/
 
 .vercel
 .env*.local
+
+# local-only obsolete copies / scratch — never commit
+midnight-trouble/
+midnight-trouble.zip
+.secrets-temp.txt
