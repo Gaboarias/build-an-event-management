@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COOKIE_NAME, verifyToken } from '@/lib/auth';
 
-// Paths reachable without a session.
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout'];
+// Reachable without a session.
+const PUBLIC_EXACT = ['/login', '/api/auth/login'];
+const PUBLIC_PREFIX = ['/invite', '/api/invite', '/api/auth/'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+  if (PUBLIC_EXACT.includes(pathname) || PUBLIC_PREFIX.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  const secret = process.env.AUTH_SECRET || '';
-  const token = req.cookies.get(COOKIE_NAME)?.value;
-  const ok = await verifyToken(secret, token);
+  const payload = await verifyToken(process.env.AUTH_SECRET || '', req.cookies.get(COOKIE_NAME)?.value);
+  if (payload) return NextResponse.next();
 
-  if (ok) return NextResponse.next();
-
-  // Unauthenticated API calls get a clean 401 instead of an HTML redirect.
   if (pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
@@ -28,7 +25,6 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-// Run on everything except Next internals and static assets.
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
